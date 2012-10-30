@@ -2,5 +2,5 @@
 all: Main
 	./Main
 
-Main:
+Main: Main.hs
 	ghc Main.hs

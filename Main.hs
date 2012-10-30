@@ -1,5 +1,5 @@
-
 import Test.HUnit
+import Text.ParserCombinators.Parsec
 
 type Var = String
 data IntExp
@@ -17,8 +17,12 @@ data BoolExp
     | GT IntExp IntExp
     deriving (Eq, Read, Show)
 
+data Decl
+    = Var
+    deriving (Eq, Read, Show)
+
 data Stmt
-    = Begin [Stmt]
+    = Begin [Decl] [Stmt]
     | Assign Var IntExp
     | Read Var
     | Write IntExp
@@ -27,14 +31,13 @@ data Stmt
     deriving (Eq, Read, Show)
 
 main = do 
-    runTestTT parse_testcases
+    runTestTT expr_testcases
 
+expr_testcases = TestList [
+        TestLabel expr (TestCase (assertEqual expr (parse_expr expr) expect)) |
+        (expr, expect) <- expr_tests]
 
-parse_testcases = TestList [
-        TestLabel expr (TestCase (assertEqual expr (parse_ast expr) expect)) |
-        (expr, expect) <- parse_tests]
-
-parse_tests = [
+expr_tests = [
         ("1", ICon 1),
         ("-1", ICon (-1)),
         ("1+2", Add (ICon 1) (ICon 2)),
@@ -44,11 +47,21 @@ parse_tests = [
         ("1/0", Div (ICon 1) (ICon 0))
     ]
 
-parse_ast = undefined
+parse_expr :: String -> IntExp
+parse_expr = undefined
+
+expr :: GenParser Char st String
+expr =
+    do result <- number
+       return (ICon number)
+
+number :: genParser Char st String
+number =
+    many (oneOf ['0'..'9'])
 
 
 prog9 = unlines [
-    "begin",
+    "begin[a,b,c]",
     "    read i;",
     "    n := 1;",
     "    while i>0 do",
