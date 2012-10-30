@@ -40,7 +40,8 @@ parse_tests = [
         ("1+2", Add (ICon 1) (ICon 2)),
         ("1-2", Sub (ICon 1) (ICon 2)),
         ("1*2", Mul (ICon 1) (ICon 2)),
-        ("1/2", Div (ICon 1) (ICon 2))
+        ("1/2", Div (ICon 1) (ICon 2)),
+        ("1/0", Div (ICon 1) (ICon 0))
     ]
 
 parse_ast = undefined
