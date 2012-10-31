@@ -33,29 +33,35 @@ data Stmt
 main = do 
     runTestTT expr_testcases
 
-expr_testcases = TestList [
-        TestLabel expr (TestCase (assertEqual expr (parse_expr expr) expect)) |
-        (expr, expect) <- expr_tests]
+expr_testcases =
+    TestList (map mktestcase expr_tests)
+    where mktestcase (str, expect) =
+            TestLabel str (TestCase (
+                case parse_expr str of
+                         Left err -> assertFailure (show err)
+                         Right parsed -> assertEqual str expect parsed
+                ))
 
 expr_tests = [
         ("1", ICon 1),
-        ("-1", ICon (-1)),
         ("1+2", Add (ICon 1) (ICon 2)),
         ("1-2", Sub (ICon 1) (ICon 2)),
+        ("-1",  Sub (ICon 0) (ICon 1)),
         ("1*2", Mul (ICon 1) (ICon 2)),
         ("1/2", Div (ICon 1) (ICon 2)),
         ("1/0", Div (ICon 1) (ICon 0))
     ]
 
-parse_expr :: String -> IntExp
-parse_expr = undefined
+parse_expr :: String -> Either ParseError IntExp
+parse_expr str = parse expr "(unknown)" str
 
-expr :: GenParser Char st String
+expr :: GenParser Char st IntExp
 expr =
     do result <- number
-       return (ICon number)
+       let num = read result :: Int
+       return (ICon num)
 
-number :: genParser Char st String
+number :: GenParser Char st String
 number =
     many (oneOf ['0'..'9'])
 
