@@ -36,11 +36,9 @@ main = do
 expr_testcases =
     TestList (map mktestcase expr_tests)
     where mktestcase (str, expect) =
-            TestLabel str (TestCase (
-                case parse_expr str of
+            TestCase (case parse_expr str of
                          Left err -> assertFailure (show err)
-                         Right parsed -> assertEqual str expect parsed
-                ))
+                         Right parsed -> assertEqual str expect parsed)
 
 expr_tests = [
         ("1", ICon 1),
