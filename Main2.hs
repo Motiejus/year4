@@ -18,9 +18,9 @@ data IntExp
     deriving (Eq, Read, Show)
 
 data BoolExp
-    = LT IntExp IntExp
-    | EQ IntExp IntExp
-    | GT IntExp IntExp
+    = Less IntExp IntExp
+    | Equal IntExp IntExp
+    | Greater IntExp IntExp
     deriving (Eq, Read, Show)
 
 data Stmt
@@ -50,7 +50,9 @@ languageDef =
                                        "and",
                                        "or",
                                        "begin",
-                                       "end"
+                                       "end",
+                                       "read",
+                                       "write"
                                      ],
              Token.reservedOpNames = ["+", "-", "*", "/", ":=",
                                       "<", ">", "and", "or", "not"]
@@ -77,9 +79,10 @@ statement :: Parser Stmt
 statement =
         beginStmt
     <|> assignStmt
---  <|> readStmt
---  <|> writeStmt
---  <|> ifStmt
+    <|> readStmt
+    <|> writeStmt
+    <|> ifStmt
+    <|> whileStmt
 
 beginStmt :: Parser Stmt
 beginStmt = 
@@ -88,6 +91,24 @@ beginStmt =
        reserved "end"
        return $ Begin list
 
+ifStmt :: Parser Stmt
+ifStmt =
+  do reserved "if"
+     cond <- rExpression
+     reserved "then"
+     stmt1 <- statement
+     reserved "else"
+     stmt2 <- statement
+     return $ IfThenElse cond stmt1 stmt2
+
+whileStmt :: Parser Stmt
+whileStmt =
+  do reserved "while"
+     cond <- rExpression
+     reserved "do"
+     stmt <- statement
+     return $ While cond stmt
+
 assignStmt :: Parser Stmt
 assignStmt =
   do var  <- identifier
@@ -95,8 +116,30 @@ assignStmt =
      expr <- aExpression
      return $ Assign var expr
 
+readStmt :: Parser Stmt
+readStmt =
+  do reserved "read"
+     var <- identifier
+     return $ Read var
+
+writeStmt :: Parser Stmt
+writeStmt =
+  do reserved "write"
+     var <- aExpression
+     return $ Write var
+
 aExpression :: Parser IntExp
 aExpression = buildExpressionParser aOperators aTerm
+
+rExpression =
+  do a1 <- aExpression
+     op <- relation
+     a2 <- aExpression
+     return $ op a1 a2
+
+relation =   (reservedOp ">" >> return Greater)
+         <|> (reservedOp "=" >> return Equal)
+         <|> (reservedOp "<" >> return Less)
 
 aTerm =  parens aExpression
      <|> liftM IVar identifier
