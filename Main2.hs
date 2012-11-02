@@ -5,7 +5,11 @@ import Text.ParserCombinators.Parsec
 import Text.ParserCombinators.Parsec.Expr
 import Text.ParserCombinators.Parsec.Language
 
+import Data.Map as Map
+
 import qualified Text.ParserCombinators.Parsec.Token as Token
+
+type Env = Map Var Integer
 
 type Var = String
 data IntExp
@@ -55,7 +59,7 @@ languageDef =
                                        "write"
                                      ],
              Token.reservedOpNames = ["+", "-", "*", "/", ":=",
-                                      "<", ">", "and", "or", "not"]
+                                      "=", "<", ">", "and", "or", "not"]
            }
 
 lexer = Token.makeTokenParser languageDef
@@ -152,9 +156,27 @@ aOperators = [
     [Infix  (reservedOp "/"   >> return Div) AssocLeft]
     ]
 
-
 parseString :: String -> Stmt
 parseString str =
   case parse whileParser "" str of
     Left e  -> error $ show e
     Right r -> r
+
+--------------------------------------------------------------------------------
+-- Interpreter
+--------------------------------------------------------------------------------
+
+update :: Var -> Integer -> Env -> Env
+update var val env =
+    Map.insert var val env
+lookup ::  Var -> Env -> Maybe Integer
+lookup var env =
+    Map.lookup var env
+
+interpret :: Env -> Stmt -> IO ()
+interpret env (Write x) =
+    putStrLn $ write env x
+
+write :: Env -> IntExp -> String
+write env (ICon int) =
+    show int
