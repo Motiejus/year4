@@ -158,8 +158,8 @@ relation =   (reservedOp ">" >> return Greater)
          <|> (reservedOp "<" >> return Less)
 
 
---main = do 
---    putStrLn "Yadda!"
+main = do
+    putStrLn "Yadda!"
 
 parseString :: String -> Stmt
 parseString str =
