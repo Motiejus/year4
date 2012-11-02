@@ -1,5 +1,7 @@
-.PHONY: all
+.PHONY: all test
 all: Main
+
+test: Main
 	./Main
 
 Main: Main.hs
