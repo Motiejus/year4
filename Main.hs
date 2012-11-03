@@ -182,27 +182,37 @@ lookup :: Var -> Env -> Integer
 lookup var env = case Map.lookup var env of Just x -> x
 
 eval :: Env -> Stmt -> IO Env
-
 eval env (Begin ss) =
   do foldM eval env ss
-
 eval env (Assign var exp) =
-    let newval = reduce env exp
-    in return (update var newval env)
-
+  let newval = reduce_e env exp
+  in return (update var newval env)
 eval env (Read var) =
   do val <- getLine
      let int = read val :: Integer
         in return (update var int env)
-
 eval env (Write var) =
-  do putStrLn . show $ reduce env var
+  do putStrLn . show $ reduce_e env var
      return (env)
+eval env (IfThenElse bool stmt1 stmt2) =
+  do eval env (if reduce_b env bool
+                 then stmt1
+                 else stmt2)
+eval env (While bool stmt) =
+  do if (reduce_b env bool) 
+     then do env' <- eval env stmt
+             eval env' (While bool stmt)
+     else return env
 
-reduce :: Env -> IntExp -> Integer
-reduce env (ICon int) = int
-reduce env (IVar var) = lookup var env
-reduce env (Add a b) = reduce env a + reduce env b
-reduce env (Sub a b) = reduce env a - reduce env b
-reduce env (Mul a b) = reduce env a * reduce env b
-reduce env (Div a b) = reduce env a `div` reduce env b
+reduce_e :: Env -> IntExp -> Integer
+reduce_e env (ICon int) = int
+reduce_e env (IVar var) = lookup var env
+reduce_e env (Add a b) = reduce_e env a + reduce_e env b
+reduce_e env (Sub a b) = reduce_e env a - reduce_e env b
+reduce_e env (Mul a b) = reduce_e env a * reduce_e env b
+reduce_e env (Div a b) = reduce_e env a `div` reduce_e env b
+
+reduce_b :: Env -> BoolExp -> Bool
+reduce_b env (Less stmt1 stmt2) = reduce_e env stmt1 < reduce_e env stmt2
+reduce_b env (Equal stmt1 stmt2) = reduce_e env stmt1 == reduce_e env stmt2
+reduce_b env (Greater stmt1 stmt2) = reduce_e env stmt1 > reduce_e env stmt2
