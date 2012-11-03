@@ -249,8 +249,9 @@ expr_tests =
         ("write 1*2", Write $ Mul (ICon 1) (ICon 2)),
         ("write 1/2", Write $ Div (ICon 1) (ICon 2)),
 
-        ("write a", Write a),
-        ("write a+b", Write $ Add a b),
-        ("write a+b+c", Write $ Add (Add a b) c),
-        ("write a+b*c", Write $ Add a (Mul b c))
+        ("write a",       Write a),
+        ("write a+b",     Write $ Add a b),
+        ("write a+b+c",   Write $ Add (Add a b) c),
+        ("write a+(b*c)", Write $ Add a (Mul b c)),
+        ("write a+b*c",   Write $ Add a (Mul b c))
         ]
