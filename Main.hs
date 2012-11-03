@@ -96,7 +96,7 @@ statement =
     <|> whileStmt
 
 beginStmt :: Parser Stmt
-beginStmt = 
+beginStmt =
     do reserved "begin"
        list <- (sepBy1 statement semi)
        reserved "end"
@@ -199,7 +199,7 @@ eval env (IfThenElse bool stmt1 stmt2) =
                  then stmt1
                  else stmt2)
 eval env (While bool stmt) =
-  do if (reduce_b env bool) 
+  do if (reduce_b env bool)
      then do env' <- eval env stmt
              eval env' (While bool stmt)
      else return env
@@ -216,3 +216,41 @@ reduce_b :: Env -> BoolExp -> Bool
 reduce_b env (Less stmt1 stmt2) = reduce_e env stmt1 < reduce_e env stmt2
 reduce_b env (Equal stmt1 stmt2) = reduce_e env stmt1 == reduce_e env stmt2
 reduce_b env (Greater stmt1 stmt2) = reduce_e env stmt1 > reduce_e env stmt2
+
+--------------------------------------------------------------------------------
+-- Main
+--------------------------------------------------------------------------------
+
+main :: IO ()
+main = do
+    prog <- getContents
+    eval (Map.fromList []) (parseString prog)
+    return ()
+
+
+--------------------------------------------------------------------------------
+-- Test
+--------------------------------------------------------------------------------
+
+expr_testcases =
+     TestList (map mktestcase expr_tests)
+     where mktestcase (str, expect) =
+             let res = parseString str
+             in TestCase (assertEqual str expect res)
+
+expr_tests =
+    let a = IVar "a"
+        b = IVar "b"
+        c = IVar "c"
+    in [
+        ("write 1", Write $ ICon 1),
+        ("write 1+2", Write $ Add (ICon 1) (ICon 2)),
+        ("write 1-2", Write $ Sub (ICon 1) (ICon 2)),
+        ("write 1*2", Write $ Mul (ICon 1) (ICon 2)),
+        ("write 1/2", Write $ Div (ICon 1) (ICon 2)),
+
+        ("write a", Write a),
+        ("write a+b", Write $ Add a b),
+        ("write a+b+c", Write $ Add (Add a b) c),
+        ("write a+b*c", Write $ Add a (Mul b c))
+        ]
