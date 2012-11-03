@@ -26,7 +26,12 @@ data IntExp
     deriving (Eq, Read, Show)
 
 data BoolExp
-    = Less IntExp IntExp
+    = Yes
+    | No
+    | Not BoolExp
+    | Or BoolExp BoolExp
+    | And BoolExp BoolExp
+    | Less IntExp IntExp
     | Equal IntExp IntExp
     | Greater IntExp IntExp
     deriving (Eq, Read, Show)
@@ -105,7 +110,7 @@ beginStmt =
 ifStmt :: Parser Stmt
 ifStmt =
   do reserved "if"
-     cond <- rExpression
+     cond <- boolExpression
      reserved "then"
      stmt1 <- statement
      reserved "else"
@@ -115,7 +120,7 @@ ifStmt =
 whileStmt :: Parser Stmt
 whileStmt =
   do reserved "while"
-     cond <- rExpression
+     cond <- boolExpression
      reserved "do"
      stmt <- statement
      return $ While cond stmt
@@ -142,7 +147,13 @@ writeStmt =
 aExpression :: Parser IntExp
 aExpression = buildExpressionParser aOperators aTerm
 
-rExpression =
+boolExpression =   (reservedOp "true" >> return Yes)
+               <|> (reservedOp "false" >> return No)
+               <|> (do reservedOp "not"
+                       exp <- boolExpression
+                       return $ Not exp)
+               <|> relExpression
+relExpression =
   do a1 <- aExpression
      op <- relation
      a2 <- aExpression
@@ -157,10 +168,14 @@ aTerm =  parens aExpression
      <|> liftM ICon integer
 
 aOperators = [
-    [Infix  (reservedOp "+"   >> return Add) AssocLeft],
-    [Infix  (reservedOp "-"   >> return Sub) AssocLeft],
-    [Infix  (reservedOp "*"   >> return Mul) AssocLeft],
-    [Infix  (reservedOp "/"   >> return Div) AssocLeft]
+        [
+            Infix (reservedOp "*" >> return Mul) AssocLeft,
+            Infix (reservedOp "/" >> return Div) AssocLeft
+        ],
+        [
+            Infix (reservedOp "+" >> return Add) AssocLeft,
+            Infix (reservedOp "-" >> return Sub) AssocLeft
+        ]
     ]
 
 parseString :: String -> Stmt
@@ -253,5 +268,10 @@ expr_tests =
         ("write a+b",     Write $ Add a b),
         ("write a+b+c",   Write $ Add (Add a b) c),
         ("write a+(b*c)", Write $ Add a (Mul b c)),
-        ("write a+b*c",   Write $ Add a (Mul b c))
+        ("write a+b*c",   Write $ Add a (Mul b c)),
+
+        ("while true do write a", While Yes (Write a)),
+        ("while a<b do write a", While (Less a b) (Write a)),
+        ("while not a<b do write a", While (Not (Less a b)) (Write a)),
+        ("while not true do write a", While (Not Yes) (Write a))
         ]
