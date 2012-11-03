@@ -11,7 +11,9 @@ import qualified Data.Map as Map
 
 import qualified Text.ParserCombinators.Parsec.Token as Token
 
-type Env = Map.Map Var Integer
+--------------------------------------------------------------------------------
+-- Abstract Syntax Tree
+--------------------------------------------------------------------------------
 
 type Var = String
 data IntExp
@@ -38,6 +40,10 @@ data Stmt
     | While BoolExp Stmt
     deriving (Eq, Read, Show)
 
+--------------------------------------------------------------------------------
+-- Parser
+--------------------------------------------------------------------------------
+
 languageDef =
   emptyDef { Token.commentStart    = "/*",
              Token.commentEnd      = "*/",
@@ -49,7 +55,6 @@ languageDef =
                                        "else",
                                        "while",
                                        "do",
-                                       "skip",
                                        "true",
                                        "false",
                                        "not",
@@ -168,20 +173,36 @@ parseString str =
 -- Interpreter
 --------------------------------------------------------------------------------
 
+type Env = Map.Map Var Integer
+
 update :: Var -> Integer -> Env -> Env
-update var val env =
-    Map.insert var val env
-lookup ::  Var -> Env -> Integer
-lookup var env =
-    case Map.lookup var env of
-        Just x -> x
+update var val env = Map.insert var val env
 
-interpret :: Env -> Stmt -> IO ()
-interpret env (Write x) =
-    putStrLn $ write env x
+lookup :: Var -> Env -> Integer
+lookup var env = case Map.lookup var env of Just x -> x
 
-write :: Env -> IntExp -> String
-write env (ICon int) =
-    show int
-write env (IVar var) =
-    show $ lookup var env
+eval :: Env -> Stmt -> IO Env
+
+eval env (Begin ss) =
+  do foldM eval env ss
+
+eval env (Assign var exp) =
+    let newval = reduce env exp
+    in return (update var newval env)
+
+eval env (Read var) =
+  do val <- getLine
+     let int = read val :: Integer
+        in return (update var int env)
+
+eval env (Write var) =
+  do putStrLn . show $ reduce env var
+     return (env)
+
+reduce :: Env -> IntExp -> Integer
+reduce env (ICon int) = int
+reduce env (IVar var) = lookup var env
+reduce env (Add a b) = reduce env a + reduce env b
+reduce env (Sub a b) = reduce env a - reduce env b
+reduce env (Mul a b) = reduce env a * reduce env b
+reduce env (Div a b) = reduce env a `div` reduce env b
