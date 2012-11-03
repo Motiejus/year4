@@ -228,6 +228,9 @@ reduce_e env (Mul a b) = reduce_e env a * reduce_e env b
 reduce_e env (Div a b) = reduce_e env a `div` reduce_e env b
 
 reduce_b :: Env -> BoolExp -> Bool
+reduce_b env Yes = True
+reduce_b env No = False
+reduce_b env (Not stmt) = not $ reduce_b env stmt
 reduce_b env (Less stmt1 stmt2) = reduce_e env stmt1 < reduce_e env stmt2
 reduce_b env (Equal stmt1 stmt2) = reduce_e env stmt1 == reduce_e env stmt2
 reduce_b env (Greater stmt1 stmt2) = reduce_e env stmt1 > reduce_e env stmt2
