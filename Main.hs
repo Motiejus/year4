@@ -1,6 +1,7 @@
 import Prelude hiding (lookup)
 
 import System.IO
+import System.Environment
 import Control.Monad
 import Test.HUnit
 import Text.ParserCombinators.Parsec
@@ -207,7 +208,8 @@ eval env (Read var) =
      let int = read val :: Integer
         in return (update var int env)
 eval env (Write var) =
-  do putStrLn . show $ reduce_e env var
+  do putStr . show $ reduce_e env var
+     putStr " "
      return (env)
 eval env (IfThenElse bool stmt1 stmt2) =
   do eval env (if reduce_b env bool
@@ -241,9 +243,21 @@ reduce_b env (Greater stmt1 stmt2) = reduce_e env stmt1 > reduce_e env stmt2
 
 main :: IO ()
 main = do
-    prog <- getContents
-    eval (Map.fromList []) (parseString prog)
-    return ()
+    args <- getArgs
+    case args of
+        [] ->
+            do
+                prog <- getProgName
+                putStrLn $ "Usage: " ++ prog ++ " program.alg"
+                putStrLn "... running tests ..."
+                runTestTT expr_testcases
+                return ()
+        (filename:[]) ->
+            do handle <- openFile filename ReadMode
+               prog <- hGetContents handle
+               eval (Map.fromList []) (parseString prog)
+               hClose handle
+               return ()
 
 
 --------------------------------------------------------------------------------

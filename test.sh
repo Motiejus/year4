@@ -4,7 +4,14 @@ set -e
 
 make -s
 
-for t in t/*.alg; do
-    ./Main $t | diff -w - ${t%.alg}.ans
+export CMD=`pwd`/Main
+
+for t in t/p*.alg; do
+    $CMD $t | diff -w - ${t%.alg}.ans
     echo "Test ${t%.alg} executed successfully"
+done
+
+for t in t/*.sh; do
+    $t
+    echo "Test ${t%sh} executed successfully"
 done
