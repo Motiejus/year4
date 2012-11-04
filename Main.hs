@@ -23,6 +23,8 @@
  - They must be executed separately by a script. Repository in
  - https://github.com/Motiejus/kinda_algol has these tests and helpers to run
  - them.
+ -
+ - See "sources" in the end of the file.
  -}
 
 import Prelude hiding (lookup)
@@ -76,6 +78,8 @@ data Stmt
 --------------------------------------------------------------------------------
 -- Parser
 --------------------------------------------------------------------------------
+
+{- Parser is mainly learnt from and heavily influenced by [2] and [3] -}
 
 languageDef =
   emptyDef { Token.identStart      = letter,
@@ -231,6 +235,8 @@ parseString str =
 --------------------------------------------------------------------------------
 -- Interpreter
 --------------------------------------------------------------------------------
+
+{- Ideas for interpreter were influenced by [4] -}
 
 type Env = Map.Map Var Integer
 
@@ -425,3 +431,10 @@ Input: 5
 Output: 5
 -}
 
+{-
+ - Sources:
+ - [1]: http://learnyouahaskell.com/
+ - [2]: http://book.realworldhaskell.org/read/using-parsec.html
+ - [3]: http://www.haskell.org/haskellwiki/Parsing_a_simple_imperative_language
+ - [4]: http://www.defmacro.org/ramblings/lisp-in-haskell.html
+ -}
