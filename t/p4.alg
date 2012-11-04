@@ -1,4 +1,4 @@
 begin
     read a;
-    write a+1;
+    write a
 end

@@ -6,12 +6,12 @@ make -s
 
 export CMD=`pwd`/Main
 
-for t in t/p*.alg; do
-    $CMD $t | diff -w - ${t%.alg}.ans
-    echo "Test ${t%.alg} executed successfully"
-done
-
-for t in t/*.sh; do
-    $t
-    echo "Test ${t%sh} executed successfully"
+for t in t/*.alg; do
+    BASE=${t%.alg}
+    if [ -f "${BASE}.in" ]; then
+        $CMD $t < "${BASE}.in" | diff -w - "${BASE}.ans"
+    else
+        $CMD $t | diff -w - "${BASE}.ans"
+    fi
+    echo "Test ${BASE} executed successfully"
 done
