@@ -1,3 +1,30 @@
+{-
+ - Motiejus Jakštys, 1003704j
+ - Functional Programming 4
+ - Programming Language Interpreter
+ - 4 November, 2012
+-}
+
+{-
+ - Status of the submission
+ --------------------------
+ - * Parser done
+ - * Interpreter done
+ - Extensions:
+ - * Handle operator precedence properly
+ - * Quality of error messages
+ - Notes on implementation:
+ - * Scoping is javascript-style (without "vars"). There is no scoping.
+ -
+ - Note on testing
+ -----------------
+ - Parser unit tests are in this program, which are executed if the program is
+ - run without arguments. Program-wide tests are in the bottom of this file.
+ - They must be executed separately by a script. Repository in
+ - https://github.com/Motiejus/kinda_algol has these tests and helpers to run
+ - them.
+ -}
+
 import Prelude hiding (lookup)
 
 import System.IO
@@ -51,10 +78,7 @@ data Stmt
 --------------------------------------------------------------------------------
 
 languageDef =
-  emptyDef { Token.commentStart    = "/*",
-             Token.commentEnd      = "*/",
-             Token.commentLine     = "//",
-             Token.identStart      = letter,
+  emptyDef { Token.identStart      = letter,
              Token.identLetter     = alphaNum,
              Token.reservedNames   = [ "if",
                                        "then",
@@ -80,7 +104,6 @@ lexer = Token.makeTokenParser languageDef
 identifier = Token.identifier lexer -- parses an identifier
 reserved   = Token.reserved   lexer -- parses a reserved name
 reservedOp = Token.reservedOp lexer -- parses an operator
-braces     = Token.braces     lexer -- passes surrounding braces
 parens     = Token.parens     lexer -- parses surrounding parenthesis:
                                     --   parens p
                                     -- takes care of the parenthesis and
@@ -100,7 +123,9 @@ statement =
     <|> writeStmt
     <|> ifStmt
     <|> whileStmt
+    <?> "statement"
 
+-- |Many statements
 beginStmt :: Parser Stmt
 beginStmt =
     do reserved "begin"
@@ -153,7 +178,22 @@ boolExpression =   (reservedOp "true" >> return Yes)
                <|> (do reservedOp "not"
                        exp <- boolExpression
                        return $ Not exp)
+--               <|> binBoolExpression
                <|> relExpression
+
+--binBoolOp =  (reservedOp "and" >> return And)
+--         <|> (reservedOp "or" >> return Or)
+
+{- This is incomplete. For some reason it makes a forever loop some other
+ - boolean expressions (in tests).
+ -}
+--binBoolExpression =
+--  do a1 <- boolExpression
+--     op <- binBoolOp
+--     a2 <- boolExpression
+--     return $ op a1 a2
+
+-- |Relational comparison expression
 relExpression =
   do a1 <- aExpression
      op <- relation
@@ -163,10 +203,12 @@ relExpression =
 relation =   (reservedOp ">" >> return Greater)
          <|> (reservedOp "=" >> return Equal)
          <|> (reservedOp "<" >> return Less)
+         <?> "comparison operator"
 
 aTerm =  parens aExpression
      <|> liftM IVar identifier
      <|> liftM ICon integer
+     <?> "number or variable"
 
 aOperators = [
         [
@@ -179,6 +221,7 @@ aOperators = [
         ]
     ]
 
+-- |Short helper to parse strings
 parseString :: String -> Stmt
 parseString str =
   case parse whileParser "" str of
@@ -197,6 +240,7 @@ update var val env = Map.insert var val env
 lookup :: Var -> Env -> Integer
 lookup var env = case Map.lookup var env of Just x -> x
 
+-- |Main entry point to evaluate statement
 eval :: Env -> Stmt -> IO Env
 eval env (Begin ss) =
   do foldM eval env ss
@@ -221,6 +265,7 @@ eval env (While bool stmt) =
              eval env' (While bool stmt)
      else return env
 
+-- |Reduce expression
 reduce_e :: Env -> IntExp -> Integer
 reduce_e env (ICon int) = int
 reduce_e env (IVar var) = lookup var env
@@ -229,6 +274,7 @@ reduce_e env (Sub a b) = reduce_e env a - reduce_e env b
 reduce_e env (Mul a b) = reduce_e env a * reduce_e env b
 reduce_e env (Div a b) = reduce_e env a `div` reduce_e env b
 
+-- |Reduce boolean expression
 reduce_b :: Env -> BoolExp -> Bool
 reduce_b env Yes = True
 reduce_b env No = False
@@ -287,8 +333,95 @@ expr_tests =
         ("write a+(b*c)", Write $ Add a (Mul b c)),
         ("write a+b*c",   Write $ Add a (Mul b c)),
 
+        ("if not true then write a else write b",
+            IfThenElse (Not Yes) (Write a) (Write b)),
+
         ("while true do write a", While Yes (Write a)),
         ("while a<b do write a", While (Less a b) (Write a)),
         ("while not a<b do write a", While (Not (Less a b)) (Write a)),
         ("while not true do write a", While (Not Yes) (Write a))
         ]
+
+{-
+ - Program-wide tests, copied from t/.
+ - See top of the file for more information.
+ -}
+
+
+{-
+t/factorial.alg:
+begin
+    i := 1;
+    ans := 1;
+    read d;
+    while i < d + 1 do
+        begin
+            ans := ans * i;
+            i := i + 1
+        end;
+    write ans
+end
+Input: 10
+Output: 3628800
+-}
+
+{-
+t/fibonacci.alg:
+begin
+    t1 := 1;
+    t2 := 1;
+    i := 2;
+    read d;
+    write t1;
+    write t2;
+    while i < d do
+        begin
+            t3 := t1 + t2;
+            t1 := t2;
+            t2 := t3;
+            i := i + 1;
+            write t3
+        end
+end
+Input: 20
+Output: 1 1 2 3 5 8 13 21 34 55 89 144 233 377 610 987 1597 2584 4181 6765
+-}
+
+{-
+t/p1.alg:
+write 5
+Output: 5
+-}
+
+{-
+t/p2.alg:
+begin
+    a := 5;
+    write a
+end
+Output: 5
+-}
+
+{-
+t/p3.alg:
+begin
+    a := 1;
+    while a < 5 do
+        begin
+            write a;
+            a := a + 1
+        end
+end
+Output: 1 2 3 4
+-}
+
+{-
+t/p4.alg:
+begin
+    read a;
+    write a
+end
+Input: 5
+Output: 5
+-}
+
