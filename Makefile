@@ -7,3 +7,6 @@ test:
 
 Main: Main.hs
 	ghc Main.hs
+
+clean:
+	rm -f Main *.hi *.o
