@@ -1,6 +1,7 @@
 \documentclass[english,11pt]{article}
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
+\usepackage{graphicx}
 \usepackage{geometry}
 \newcommand{\naive}{na\"{\i}ve\ }
 \usepackage{babel}
@@ -74,16 +75,23 @@ $$ E[n] = \sum_{k=-\infty}^{\infty} s^2[k] \cdot w[n-k] $$
 
 Where $n$ is the sample number and $w$ is a rectangular window.
 
-
 Magnitude:
 
 $$ M[n] = \sum_{k=-\infty}^{\infty} |s[k]| \cdot w[n-k] $$
 
+\begin{figure}[htb]
+    \centering
+    \includegraphics[width=0.9\textwidth]{res/sample_m.pdf}
+    \caption{Magnitude}
+    \label{fig:awesome_image}
+\end{figure}
+
 Zero crossing rate:
 
-$$ Z[n] = \frac{1}{2N} \
-    \sum_{k=-\infty}^{\infty}
-    |sign(s[k]) - sign(s[k-1])| \cdot w[n-m]
+$$
+    Z[n] = \frac{1}{2N} \
+        \sum_{k=-\infty}^{\infty}
+        |sign(s[k]) - sign(s[k-1])| \cdot w[n-m]
 $$
 
 \end{document}

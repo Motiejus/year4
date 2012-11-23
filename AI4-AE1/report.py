@@ -18,7 +18,7 @@ def main(filename):
     2. LaTeX table summarizing the prediction performance.
 
     Output:
-        ./res/predictions.eps
+        ./res/predictions.pdf
         ./res/prediction_table.tex
     """
     data = execute(filename)
@@ -30,7 +30,7 @@ def main(filename):
 
     matplotlib.use('Agg')
     bar = produce_bar(data)
-    bar.savefig('./res/predictions.eps')
+    bar.savefig('./res/predictions.pdf')
 
     output = produce_table(data)
     with open('./res/prediction_table.tex', 'w') as f:
@@ -49,7 +49,7 @@ def produce_bar(data):
     p2 = plt.bar(ind, ok, width, bottom=err, color='y', hatch='/')
     plt.xticks(ind+width/2., ('Silence', 'Speech'))
     plt.yticks(np.arange(0,61,5))
-    plt.legend( (p1[0], p2[0]), ('Incorrect', 'Correct') )
+    plt.legend((p1[0], p2[0]), ('Incorrect', 'Correct') )
     plt.grid(axis='y')
     return fig
 

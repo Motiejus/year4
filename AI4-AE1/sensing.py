@@ -8,6 +8,7 @@ import itertools
 
 from collections import deque
 from math import log
+import numpy as np
 
 WINDOW_SIZE = 300
 
@@ -63,19 +64,25 @@ def normalize(l):
     return [v / factor for v in l]
 
 
-def plot(filename, program):
+def plot(filename, program, title, type):
     samples = read_samples(filename)
 
+    import matplotlib
+    matplotlib.use('Agg')
     import matplotlib.pyplot as plt
+    fig = plt.figure()
     plt.plot(normalize(list(program(samples, WINDOW_SIZE))))
     plt.plot(normalize(samples))
-    plt.show()
+    plt.xticks(np.arange(0,2401,300))
+    plt.legend((title, 'Signal'))
+    plt.xlabel("Sample #")
+    fig.savefig('./res/sample_%s.pdf' % type)
 
 
 def usage(cmd):
     print ("Usage: %s COMMAND FILENAME" % cmd)
     print ("")
-    print ("    COMMAND := energy | magnitude | zcr | test | stats")
+    print ("    COMMAND := e | m | z | test | stats")
     print ("    in case of test, FILENAME is not required")
 
 
@@ -172,12 +179,12 @@ if __name__ == "__main__":
             m = log(avg(magnitude(read_samples(sys.argv[2]), WINDOW_SIZE)))
             z = log(avg(zcr(read_samples(sys.argv[2]), WINDOW_SIZE)))
             print ("%s\t%.6f\t%.6f\t%.6f" % (sys.argv[2], e, m, z))
-        elif 'magnitude' in sys.argv[1]:
-            plot(sys.argv[2], magnitude)
-        elif 'energy' in sys.argv[1]:
-            plot(sys.argv[2], energy)
-        elif 'zcr' in sys.argv[1]:
-            plot(sys.argv[2], zcr)
+        elif 'm' == sys.argv[1]:
+            plot(sys.argv[2], magnitude, "Magnitude", "m")
+        elif 'e' == sys.argv[1]:
+            plot(sys.argv[2], energy, "Energy", "e")
+        elif 'z' == sys.argv[1]:
+            plot(sys.argv[2], zcr, "ZCR", "z")
         elif 'test' in sys.argv[1]:
             suite = unittest.TestLoader().loadTestsFromModule(
                     sys.modules[__name__])
