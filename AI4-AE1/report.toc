@@ -1,9 +1,0 @@
-\select@language {english}
-\contentsline {section}{\numberline {1}Introduction}{3}
-\contentsline {subsection}{\numberline {1.1}Identification}{3}
-\contentsline {subsection}{\numberline {1.2}Contents of the deliverable}{3}
-\contentsline {section}{\numberline {2}Design}{3}
-\contentsline {subsection}{\numberline {2.1}Performance}{3}
-\contentsline {subsection}{\numberline {2.2}Environment}{3}
-\contentsline {subsection}{\numberline {2.3}Actuators}{3}
-\contentsline {subsection}{\numberline {2.4}Sensors}{3}

@@ -1,6 +1,7 @@
 *.py[ac]
 *.aux
 *.log
+*.toc
 report.pdf
 /samples/
 /res/
