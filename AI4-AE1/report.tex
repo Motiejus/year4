@@ -3,8 +3,10 @@
 \usepackage[utf8]{inputenc}
 \usepackage{graphicx}
 \usepackage{geometry}
-\newcommand{\naive}{na\"{\i}ve\ }
+\usepackage{caption}
+\usepackage{subcaption}
 \usepackage{babel}
+\newcommand{\naive}{na\"{\i}ve\ }
 
 \begin{document}
 
@@ -67,31 +69,50 @@ This work consisted of two sub-tasks:
 
 At first a program was made which can extract energy, magnitude and ZCR from
 the file. This is the first step in sensing: extract necessary properties from
-raw data. All three properties were calculated using a window of 300 samples.
+raw data. In this work all three properties were calculated using a window of
+300 samples.
 
-Energy is calculated as follows:
+Below you will find energy, magnitude and ZCR described. Each property has an
+associated figure.
+
+Energy (fig.~\ref{fig:sample_e}) is calculated as follows:
 
 $$ E[n] = \sum_{k=-\infty}^{\infty} s^2[k] \cdot w[n-k] $$
 
 Where $n$ is the sample number and $w$ is a rectangular window.
 
-Magnitude:
+Very similarly magnitude (fig.~\ref{fig:sample_m}):
 
 $$ M[n] = \sum_{k=-\infty}^{\infty} |s[k]| \cdot w[n-k] $$
 
-\begin{figure}[htb]
-    \centering
-    \includegraphics[width=0.9\textwidth]{res/sample_m.pdf}
-    \caption{Magnitude}
-    \label{fig:awesome_image}
-\end{figure}
-
-Zero crossing rate:
+Zero crossing rate (fig.~\ref{fig:sample_z}):
 
 $$
     Z[n] = \frac{1}{2N} \
         \sum_{k=-\infty}^{\infty}
         |sign(s[k]) - sign(s[k-1])| \cdot w[n-m]
 $$
+
+\begin{figure}
+    \centering
+    \begin{subfigure}[b]{0.5\textwidth}
+        \includegraphics[width=\textwidth]{res/sample_e.pdf}
+        \caption{Energy}
+        \label{fig:sample_e}
+    \end{subfigure}%
+    \begin{subfigure}[b]{0.5\textwidth}
+        \includegraphics[width=\textwidth]{res/sample_m.pdf}
+        \caption{Magnitude}
+        \label{fig:sample_m}
+    \end{subfigure}
+
+    \begin{subfigure}[b]{\textwidth}
+        \includegraphics[width=\textwidth]{res/sample_z.pdf}
+        \caption{ZCR}
+        \label{fig:sample_z}
+    \end{subfigure}
+\end{figure}
+
+
 
 \end{document}
