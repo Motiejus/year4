@@ -2,7 +2,7 @@
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
 \usepackage{geometry}
-\newcommand{\naive}{na\"{\i}ve}
+\newcommand{\naive}{na\"{\i}ve\ }
 \usepackage{babel}
 
 \begin{document}
@@ -49,5 +49,41 @@ database with a statistical property of the phone conversation.
 
 \subsection{Sensors}
 Since this agent is purely software agent, its sensors are sound files.
+
+
+\section{Theory}
+
+This work consisted of two sub-tasks:
+\begin{description}
+    \item{Sensing:} reading the sample files, extracting energy, magnitude and
+        zero crossing rate (later ZCR).
+
+    \item{Reasonining:} applying \naive Bayes classifier to the data and
+        predicting the class (speech or silence) of the given file.
+\end{description}
+
+\subsection{Sensing}
+
+At first a program was made which can extract energy, magnitude and ZCR from
+the file. This is the first step in sensing: extract necessary properties from
+raw data. All three properties were calculated using a window of 300 samples.
+
+Energy is calculated as follows:
+
+$$ E[n] = \sum_{k=-\infty}^{\infty} s^2[k] \cdot w[n-k] $$
+
+Where $n$ is the sample number and $w$ is a rectangular window.
+
+
+Magnitude:
+
+$$ M[n] = \sum_{k=-\infty}^{\infty} |s[k]| \cdot w[n-k] $$
+
+Zero crossing rate:
+
+$$ Z[n] = \frac{1}{2N} \
+    \sum_{k=-\infty}^{\infty}
+    |sign(s[k]) - sign(s[k-1])| \cdot w[n-m]
+$$
 
 \end{document}
