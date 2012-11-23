@@ -23,11 +23,6 @@ def main(filename):
     """
     data = execute(filename)
 
-    try:
-        os.mkdir("./res")
-    except OSError:
-        pass
-
     matplotlib.use('Agg')
     bar = produce_bar(data)
     bar.savefig('./res/predictions.pdf')
