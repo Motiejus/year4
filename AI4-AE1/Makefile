@@ -1,7 +1,7 @@
 
 .PHONY: all clean distclean
 
-AGGR_PLOTS := res/aggr_e-m.tex res/aggr_e-z.tex res/aggr_m-z.tex
+AGGR_PLOTS := res/aggr_e-m.pdf res/aggr_e-z.pdf res/aggr_m-z.pdf
 SAMPLE_PLOTS := res/sample_e.pdf res/sample_m.pdf res/sample_z.pdf
 
 all: report.pdf
@@ -9,7 +9,7 @@ all: report.pdf
 res:
 	mkdir -p res
 
-res/aggr_%.tex: samples/summary.txt res
+res/aggr_%.pdf: samples/summary.txt res
 	./plot.sh $*
 
 res/sample_%.pdf: laboratory.dat res

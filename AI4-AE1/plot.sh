@@ -2,8 +2,8 @@
 set -e
 
 E_M=$(cat <<EOF
-set terminal latex
-set output 'res/aggr_e-m.tex'
+set terminal pdf
+set output 'res/aggr_e-m.pdf'
 set title "Energy vs Magnitude"
 set xlabel "Energy"
 set ylabel "Magnitude"
@@ -12,8 +12,8 @@ EOF
 )
 
 E_Z=$(cat <<EOF
-set terminal latex
-set output 'res/aggr_e-z.tex'
+set terminal pdf
+set output 'res/aggr_e-z.pdf'
 set title "Energy vs Zero Crossing Rate"
 set xlabel "Energy"
 set ylabel "ZCR"
@@ -22,8 +22,8 @@ EOF
 )
 
 M_Z=$(cat <<EOF
-set terminal latex
-set output 'res/aggr_m-z.tex'
+set terminal pdf
+set output 'res/aggr_m-z.pdf'
 set title "Magnitude vs Zero Crossing Rate"
 set xlabel "Magnitude"
 set ylabel "ZCR"
