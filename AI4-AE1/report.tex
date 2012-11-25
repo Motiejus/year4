@@ -184,10 +184,22 @@ speech), we have to apply Bayes and chain rules:
 
 Getting to equation~\ref{eq:chain_rule} is just applying chain rule. Since the
 equation denominator is a constant (does not depend on $C$), it is equal in
-both classes (silence and speech), and hence it gets a new name $\alpha$.
+both classes (silence and speech), and hence we assign it a new name $\alpha$.
 Getting to equation~\ref{eq:independence} is slightly more interesting. Like
 mentioned before, we believe that all properties -- energy, magnitude and ZCR
 -- are conditionally independent. For that reason we can simplify the mentioned
 expression using \naive Bayesian classifier.
+
+$P(C)$ is known to be $0.5$, because it is known that exactly half of the files
+are speech, and the other half are silence. Given $\sigma^{2}$ is standard
+deviation of energy values in the given class, and $\mu$ is the mean of the
+same set of values, Normal probability distribution can be calculated as
+follows:
+
+$$
+P(E = v|C) = \frac{1}{\sqrt{2 \pi \sigma^{2}}}
+e ^{- \frac{ (v - \mu)^2 }{2 \sigma^2} }
+$$
+
 
 \end{document}
