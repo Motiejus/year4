@@ -227,6 +227,25 @@ experiment results will be presented.
 
 \section{Experiments}
 
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\textwidth]{res/predictions.pdf}
+    \caption{Prediction performance}
+    \label{fig:simple_performance}
+\end{figure}
+
+Like it can be seen in figure~\ref{fig:simple_performance}, all records with
+silence were predicted properly, but five records with speech were
+mis-predicted as silence. See more details about performance in
+table~\ref{tab:correlation_table}.
+
+\begin{figure}
+    \centering
+    \caption{Correlation table}
+    \correlationtable
+    \label{tab:correlation_table}
+\end{figure}
+
 \clearpage
 \begin{thebibliography}{9}
 
