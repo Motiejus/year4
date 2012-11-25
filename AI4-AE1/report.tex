@@ -15,6 +15,7 @@
 \newcommand{\Naive}{Na\"{\i}ve\ }
 \newcommand{\listing}[1]{
     \subsubsection{#1}
+    \label{lst:#1}
     {\small \verbatiminput{#1}}
 }
 
@@ -37,8 +38,8 @@ This document is the report of the Artificial Intelligence 4 Assessed
 Exercise.
 
 \subsection{Contents of the deliverable}
-
-TODO
+This deliverable is a report of the assessed exercise. Including theory,
+experiment report and source files used to achieve it.
 
 \section{Design}
 There were 100 audio files given: 50 containing silence, and 50 containing
@@ -64,7 +65,6 @@ database with a statistical property of the phone conversation.
 
 \subsection{Sensors}
 Since this agent is purely software agent, its sensors are sound files.
-
 
 \section{Theory}
 
@@ -104,8 +104,8 @@ $$
         |sign(s[k]) - sign(s[k-1])| \cdot w[n-m]
 $$
 
-Implementations of these functions can be found in a file TODO in
-appendix TODO.
+Implementations of these functions can be found in \texttt{sensing.py}
+(listing~\ref{lst:sensing.py}).
 
 \begin{figure}
     \centering
@@ -230,7 +230,8 @@ $$
 Now just calculating values of $P(C=silence| E, M, Z)$ are just putting the
 numbers into equation \ref{eq:independence}. This explanation completes the
 theory how to get a probability distribution of an unknown file. Now some
-experiment results will be presented.
+experiment results will be presented. This is done in \texttt{analyze.py}
+(listing~\ref{lst:analyze.py}).
 
 \section{Experiments}
 
