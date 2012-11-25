@@ -6,6 +6,7 @@
 \usepackage{caption}
 \usepackage{subcaption}
 \usepackage{babel}
+\usepackage{amsmath}
 \newcommand{\naive}{na\"{\i}ve\ }
 
 \begin{document}
@@ -61,11 +62,13 @@ This work consisted of two sub-tasks:
     \item{Sensing:} reading the sample files, extracting energy, magnitude and
         zero crossing rate (later ZCR).
 
-    \item{Reasonining:} applying \naive Bayes classifier to the data and
+    \item{Reasoning:} applying \naive Bayes classifier to the data and
         predicting the class (speech or silence) of the given file.
 \end{description}
 
 \subsection{Sensing}
+
+\subsubsection{Extracting Energy, Magnitude, ZCR}
 
 At first a program was made which can extract energy, magnitude and ZCR from
 the file. This is the first step in sensing: extract necessary properties from
@@ -79,14 +82,14 @@ $$ E[n] = \sum_{k=-\infty}^{\infty} s^2[k] \cdot w[n-k] $$
 
 Where $n$ is the sample number and $w$ is a rectangular window.
 
-Very similarly magnitude (fig.~\ref{fig:sample_m}):
+Magnitude (fig.~\ref{fig:sample_m}):
 
 $$ M[n] = \sum_{k=-\infty}^{\infty} |s[k]| \cdot w[n-k] $$
 
 Zero crossing rate (fig.~\ref{fig:sample_z}):
 
 $$
-    Z[n] = \frac{1}{2N} \
+    Z[n] = \frac{1}{2N}
         \sum_{k=-\infty}^{\infty}
         |sign(s[k]) - sign(s[k-1])| \cdot w[n-m]
 $$
@@ -109,7 +112,79 @@ $$
         \caption{ZCR}
         \label{fig:sample_z}
     \end{subfigure}
+    \caption{Sample audio file}\label{fig:sample}
 \end{figure}
 
+\subsubsection{Aggregating sample data}
+
+Once it was possible to calculate energy, magnitude and ZCR, it was necessary
+to aggregate the data. A value by itself does not give much information,
+however, mean value of the file is a bit more valuable property. Once means of
+every property for every file are known, correlation between those can be
+visualised and measured.
+
+Pearson correlation for energy--magnitude is $0.9955$
+(fig.~\ref{fig:aggr_e-m}), for energy--ZCR is $-0.6041$
+(fig.~\ref{fig:aggr_e-z}) and magnitude--ZCR is $-0.6281$
+(fig.~\ref{fig:aggr_m-z}).
+
+\begin{figure}
+    \centering
+    \begin{subfigure}[b]{0.33\textwidth}
+        \includegraphics[width=\textwidth]{res/aggr_e-m.pdf}
+        \caption{Energy -- Magnitude}
+        \label{fig:aggr_e-m}
+    \end{subfigure}%
+    \begin{subfigure}[b]{0.33\textwidth}
+        \includegraphics[width=\textwidth]{res/aggr_e-z.pdf}
+        \caption{Energy -- ZCR}
+        \label{fig:aggr_e-z}
+    \end{subfigure}%
+    \begin{subfigure}[b]{0.33\textwidth}
+        \includegraphics[width=\textwidth]{res/aggr_m-z.pdf}
+        \caption{Magnitude -- ZCR}
+        \label{fig:aggr_m-z}
+    \end{subfigure}
+    \caption{Aggregated data}\label{fig:aggr}
+\end{figure}
+
+\subsubsection{Classification}
+
+Our goal is to apply \naive Bayes classification to the data set, and decide
+the class of the unknown file, whether it is silence or speech. We (strongly)
+assume that neither of the properties that we are using in the classification
+are dependant. For the first run let us close our eyes to the $0.995$ linear
+correlation between energy and magnitude, run the analysis and measure the
+performance. Later the most conflicting metric will be discarded, learning and
+analysis will be re-ran, and performance will be compared.
+
+Given an unknown file probability of it being silence or speech is the same:
+
+$$ P(silence) = P(speech) = 0.5 $$
+
+It is possible to determine probability distribution of $P(C|E)$, $P(C|M)$,
+$P(C|Z)$. Our goal is to calculate $ P(silence | E, M, Z) $ from that data. In
+other words, calculate probability of the file being silence, given energy,
+magnitude and ZCR, given our training set. In order to get $P(cause|effect)$
+(in this case cause is energy, magnitude and ZCR, and effect is silence or
+speech), we have to apply Bayes and chain rules:
+
+\begin{align}
+   & P(C | E, M, Z) = \\
+   & \frac{ P(E|C,M,Z) P(C|M,Z) }{ P(E|M,Z) } = \\
+   & \frac{ P(E|C,M,Z) P(M|C,Z) P(C|Z) }{ P(E|M,Z) P(M|Z) } = \\
+   & \frac{ P(E|C,M,Z) P(M|C,Z) P(Z|C) P(C) }{ P(E|M,Z) P(M|Z) P(Z) } =
+    \label{eq:chain_rule} \\
+   & \alpha P(E|C,M,Z) P(M|C,Z) P(Z|C) P(C) = \label{eq:alpha} \\
+   & \alpha P(E|C) P(M|C) P(Z|C) P(C) \label{eq:independence}
+\end{align}
+
+Getting to equation~\ref{eq:chain_rule} is just applying chain rule. Since the
+equation denominator is a constant (does not depend on $C$), it is equal in
+both classes (silence and speech), and hence it gets a new name $\alpha$.
+Getting to equation~\ref{eq:independence} is slightly more interesting. Like
+mentioned before, we believe that all properties -- energy, magnitude and ZCR
+-- are conditionally independent. For that reason we can simplify the mentioned
+expression using \naive Bayesian classifier.
 
 \end{document}

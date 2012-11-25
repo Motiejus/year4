@@ -9,10 +9,10 @@ all: report.pdf
 res:
 	mkdir -p res
 
-res/aggr_%.pdf: samples/summary.txt res
+res/aggr_%.pdf: samples/summary.txt plot.sh res
 	./plot.sh $*
 
-res/sample_%.pdf: laboratory.dat res
+res/sample_%.pdf: laboratory.dat sensing.py res
 	./sensing.py $* $<
 
 report.pdf: report.tex res/predictions.pdf res/prediction_table.tex \

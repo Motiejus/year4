@@ -4,7 +4,7 @@ set -e
 E_M=$(cat <<EOF
 set terminal pdf
 set output 'res/aggr_e-m.pdf'
-set title "Energy vs Magnitude"
+set title "Energy - Magnitude"
 set xlabel "Energy"
 set ylabel "Magnitude"
 plot "samples/summary.txt" using 2:3
@@ -14,7 +14,7 @@ EOF
 E_Z=$(cat <<EOF
 set terminal pdf
 set output 'res/aggr_e-z.pdf'
-set title "Energy vs Zero Crossing Rate"
+set title "Energy - Zero Crossing Rate"
 set xlabel "Energy"
 set ylabel "ZCR"
 plot "samples/summary.txt" using 2:4
@@ -24,7 +24,7 @@ EOF
 M_Z=$(cat <<EOF
 set terminal pdf
 set output 'res/aggr_m-z.pdf'
-set title "Magnitude vs Zero Crossing Rate"
+set title "Magnitude - Zero Crossing Rate"
 set xlabel "Magnitude"
 set ylabel "ZCR"
 plot "samples/summary.txt" using 3:4
