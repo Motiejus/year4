@@ -8,10 +8,15 @@
 \usepackage{babel}
 \usepackage{amsmath}
 \usepackage[nottoc,numbib]{tocbibind}
+\usepackage{verbatim}
 \usepackage{hyperref}
+\numberwithin{equation}{section}
 \newcommand{\naive}{na\"{\i}ve\ }
 \newcommand{\Naive}{Na\"{\i}ve\ }
-\numberwithin{equation}{section}
+\newcommand{\listing}[1]{
+    \subsubsection{#1}
+    {\small \verbatiminput{#1}}
+}
 
 \input{res/report_data.tex}
 
@@ -295,6 +300,25 @@ experiment yielded slightly better results. In other words, the second algorithm
 was "by tiny fraction less wrong".
 
 \section{Appendix}
+
+The whole code repository is available on github: \\
+\url{https://github.com/Motiejus/year4/tree/master/AI4-AE1}
+
+\subsection{Core programs}
+These scripts are the core of the program. They do sensing and analysis.
+
+\listing{sensing.py}
+\listing{analyze.py}
+
+\subsection{Miscelanous files}
+
+These scripts are helpers for core program execution, plotting, and report
+generation.
+
+\listing{plot.sh}
+\listing{report.py}
+\listing{Makefile}
+\listing{samples/Makefile}
 
 \clearpage
 \begin{thebibliography}{9}
