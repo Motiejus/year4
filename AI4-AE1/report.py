@@ -78,6 +78,11 @@ def produce_table(data):
             return "   -   ", "   -   "
 
     corr_data = (
+            "\\newcommand{\\sicorrectnum}{%d}\n"
+            "\\newcommand{\\spcorrectnum}{%d}\n"
+            "\\newcommand{\\siincorrectnum}{%d}\n"
+            "\\newcommand{\\spincorrectnum}{%d}\n"
+
             "\\newcommand{\\sicorrectmean}{%s}\n"
             "\\newcommand{\\sicorrectstddev}{%s}\n"
             "\\newcommand{\\spcorrectmean}{%s}\n"
@@ -86,19 +91,29 @@ def produce_table(data):
             "\\newcommand{\\siincorrectstddev}{%s}\n"
             "\\newcommand{\\spincorrectmean}{%s}\n"
             "\\newcommand{\\spincorrectstddev}{%s}\n\n") % \
-                    (fmt('silence', 'ok') + fmt('speech', 'ok') +
-                            fmt('silence', 'err') + fmt('speech', 'err'))
+                    ((
+                        len(data2['silence']['ok']),
+                        len(data2['speech']['ok']),
+                        len(data2['silence']['err']),
+                        len(data2['speech']['err'])
+                        ) + fmt('silence', 'ok') + \
+                    fmt('speech', 'ok') + \
+                    fmt('silence', 'err') + fmt('speech', 'err'))
 
-    corr_table = ("\\begin{tabular}{r | c | c || c | c |}\n"
-            "\\cline{2-5}\n"
-            "& \\multicolumn{2}{|c||}{silence} "
-            "& \\multicolumn{2}{c|}{speech}\\\\ \\cline{2-5}\n"
-            "& mean & stddev & mean & stddev \\\\ \\hline\n"
+    corr_table = ("\\begin{tabular}{r | c | c | c || c | c | c |}\n"
+            "\\cline{2-7}\n"
+            "& \\multicolumn{3}{|c||}{silence} "
+            "& \\multicolumn{3}{c|}{speech}\\\\ \\cline{2-7}\n"
+            "& len & mean & stddev & len & mean & stddev \\\\ \\hline\n"
             "correct classifications "
+            "& $\\sicorrectnum$ "
             "& $\\sicorrectmean$ & $\\sicorrectstddev$ "
+            "& $\\spcorrectnum$ "
             "& $\\spcorrectmean$ & $\\spcorrectstddev$ \\\\ \\hline\n"
             "incorrect classifications "
+            "& $\\siincorrectnum$ "
             "& $\\siincorrectmean$ & $\\siincorrectstddev$ "
+            "& $\\spincorrectnum$ "
             "& $\\spincorrectmean$ & $\\spincorrectstddev$ \\\\ \\hline\n"
             "\\end{tabular}")
     return corr_data + ("\\newcommand{\\correlationtable}{\n%s\n}" % corr_table)
