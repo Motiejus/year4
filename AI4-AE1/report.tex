@@ -301,18 +301,35 @@ was "by tiny fraction less wrong".
 
 \section{Appendix}
 
-The whole code repository is available on github: \\
-\url{https://github.com/Motiejus/year4/tree/master/AI4-AE1}
+The whole code repository is available here:
+\url{https://github.com/Motiejus/year4/tree/master/AI4-AE1}. Once downloaded,
+compiling the report can be done by typing to the shell:
+
+\texttt {
+   \$ make
+}
+
+This includes fetching the sample audio files (payload), running the sensing
+and analysis, plotting the graphs and compiling the report. Resulting file is
+report.pdf.
+
+To speed up the process this is possible:
+
+\texttt {
+    \$ make -jN
+}
+
+where \texttt{N} is the number of cores available on the system $+1$.
 
 \subsection{Core programs}
-These scripts are the core of the program. They do sensing and analysis.
+These files are the core of the program. They do sensing and analysis.
 
 \listing{sensing.py}
 \listing{analyze.py}
 
 \subsection{Miscelanous files}
 
-These scripts are helpers for core program execution, plotting, and report
+These files are helpers for core program execution, plotting, and report
 generation.
 
 \listing{plot.sh}
