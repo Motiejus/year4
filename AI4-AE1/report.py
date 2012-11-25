@@ -86,18 +86,18 @@ def produce_table(data):
             "\\newcommand{\\siincorrectstddev}{%s}\n"
             "\\newcommand{\\spincorrectmean}{%s}\n"
             "\\newcommand{\\spincorrectstddev}{%s}\n\n") % \
-                    (fmt('speech', 'ok') + fmt('silence', 'ok') +
-                            fmt('speech', 'err') + fmt('silence', 'err'))
+                    (fmt('silence', 'ok') + fmt('speech', 'ok') +
+                            fmt('silence', 'err') + fmt('speech', 'err'))
 
     corr_table = ("\\begin{tabular}{r | c | c || c | c |}\n"
             "\\cline{2-5}\n"
             "& \\multicolumn{2}{|c||}{silence} "
             "& \\multicolumn{2}{c|}{speech}\\\\ \\cline{2-5}\n"
             "& mean & stddev & mean & stddev \\\\ \\hline\n"
-            "correct samples "
+            "correct classifications "
             "& $\\sicorrectmean$ & $\\sicorrectstddev$ "
             "& $\\spcorrectmean$ & $\\spcorrectstddev$ \\\\ \\hline\n"
-            "incorrect samples "
+            "incorrect classifications "
             "& $\\siincorrectmean$ & $\\siincorrectstddev$ "
             "& $\\spincorrectmean$ & $\\spincorrectstddev$ \\\\ \\hline\n"
             "\\end{tabular}")

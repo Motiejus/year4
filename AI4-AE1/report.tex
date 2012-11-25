@@ -237,7 +237,12 @@ experiment results will be presented.
 Like it can be seen in figure~\ref{fig:simple_performance}, all records with
 silence were predicted properly, but five records with speech were
 mis-predicted as silence. See more details about performance in
-table~\ref{tab:correlation_table}.
+table~\ref{tab:correlation_table}. Value in "silence correct mean" means that
+the average correct prediction for a silence sample is $\sicorrectmean$. This
+means that our Bayesian classifier was quite determined about the class of the
+file. However, value in "speech incorrect classifications" means that actual
+speech samples were given average probability being speech of
+$\spincorrectmean$.
 
 \begin{figure}
     \centering
