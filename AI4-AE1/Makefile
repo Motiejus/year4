@@ -31,7 +31,7 @@ samples/summary.txt: samples
 clean:
 	rm -f *.pyc
 	rm -fr res
-	rm -f report.aux report.log report.pdf report.toc
+	rm -f report.aux report.log report.pdf report.toc report.out
 	-$(MAKE) $(MAKEFLAGS) -C samples clean
 
 distclean: clean

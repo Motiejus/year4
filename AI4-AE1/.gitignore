@@ -2,6 +2,7 @@
 *.aux
 *.log
 *.toc
+*.out
 report.pdf
 /samples/
 /res/
