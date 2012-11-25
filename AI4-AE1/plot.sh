@@ -4,30 +4,33 @@ set -e
 E_M=$(cat <<EOF
 set terminal pdf
 set output 'res/aggr_e-m.pdf'
-set title "Energy - Magnitude"
 set xlabel "Energy"
 set ylabel "Magnitude"
-plot "samples/summary.txt" using 2:3
+set key left top
+plot "< grep ^silence samples/summary.txt" using 2:3 title "Silence", \
+    "< grep ^speech samples/summary.txt" using 2:3 title "Speech"
 EOF
 )
 
 E_Z=$(cat <<EOF
 set terminal pdf
+set key off
 set output 'res/aggr_e-z.pdf'
-set title "Energy - Zero Crossing Rate"
 set xlabel "Energy"
 set ylabel "ZCR"
-plot "samples/summary.txt" using 2:4
+plot "< grep ^silence samples/summary.txt" using 2:4 title "Silence", \
+    "< grep ^speech samples/summary.txt" using 2:4 title "Speech"
 EOF
 )
 
 M_Z=$(cat <<EOF
 set terminal pdf
+set key off
 set output 'res/aggr_m-z.pdf'
-set title "Magnitude - Zero Crossing Rate"
 set xlabel "Magnitude"
 set ylabel "ZCR"
-plot "samples/summary.txt" using 3:4
+plot "< grep ^silence samples/summary.txt" using 3:4 title "Silence", \
+    "< grep ^speech samples/summary.txt" using 3:4 title "Speech"
 EOF
 )
 

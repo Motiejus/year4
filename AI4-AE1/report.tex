@@ -70,11 +70,11 @@ This work consisted of two sub-tasks:
 
 \subsubsection{Extracting Energy, Magnitude, ZCR}
 
-At first a program was made which can extract energy, magnitude and ZCR from
-the file. This is the first step in sensing: extract necessary properties from
-raw data. In this work all three properties were calculated using a window of
-300 samples. Here you will find energy, magnitude and ZCR described. Each
-property has an associated figure with a provided sample.
+At first a program was made which can extract energy, magnitude and ZCR. This
+is the first step in sensing: extract necessary properties from raw data. In
+this work all three properties were calculated using a window of 240 samples.
+Here you will find energy, magnitude and ZCR described. Each property has an
+associated figure with a provided sample.
 
 Energy (fig.~\ref{fig:sample_e}) is calculated as follows:
 
@@ -96,18 +96,19 @@ $$
 
 \begin{figure}
     \centering
-    \begin{subfigure}[b]{0.5\textwidth}
+    \begin{subfigure}[b]{0.6\textwidth}
         \includegraphics[width=\textwidth]{res/sample_e.pdf}
         \caption{Energy}
         \label{fig:sample_e}
-    \end{subfigure}%
-    \begin{subfigure}[b]{0.5\textwidth}
+    \end{subfigure}
+
+    \begin{subfigure}[b]{0.6\textwidth}
         \includegraphics[width=\textwidth]{res/sample_m.pdf}
         \caption{Magnitude}
         \label{fig:sample_m}
     \end{subfigure}
 
-    \begin{subfigure}[b]{\textwidth}
+    \begin{subfigure}[b]{0.6\textwidth}
         \includegraphics[width=\textwidth]{res/sample_z.pdf}
         \caption{ZCR}
         \label{fig:sample_z}
@@ -130,17 +131,19 @@ Pearson correlation for energy--magnitude is $0.9955$
 
 \begin{figure}
     \centering
-    \begin{subfigure}[b]{0.33\textwidth}
+    \begin{subfigure}[b]{0.6\textwidth}
         \includegraphics[width=\textwidth]{res/aggr_e-m.pdf}
         \caption{Energy -- Magnitude}
         \label{fig:aggr_e-m}
-    \end{subfigure}%
-    \begin{subfigure}[b]{0.33\textwidth}
+    \end{subfigure}
+
+    \begin{subfigure}[b]{0.6\textwidth}
         \includegraphics[width=\textwidth]{res/aggr_e-z.pdf}
         \caption{Energy -- ZCR}
         \label{fig:aggr_e-z}
-    \end{subfigure}%
-    \begin{subfigure}[b]{0.33\textwidth}
+    \end{subfigure}
+
+    \begin{subfigure}[b]{0.6\textwidth}
         \includegraphics[width=\textwidth]{res/aggr_m-z.pdf}
         \caption{Magnitude -- ZCR}
         \label{fig:aggr_m-z}
