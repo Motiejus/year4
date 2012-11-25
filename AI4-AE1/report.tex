@@ -7,7 +7,11 @@
 \usepackage{subcaption}
 \usepackage{babel}
 \usepackage{amsmath}
+\usepackage[nottoc,numbib]{tocbibind}
+\usepackage{hyperref}
 \newcommand{\naive}{na\"{\i}ve\ }
+
+\input{res/report_data.tex}
 
 \begin{document}
 
@@ -124,9 +128,9 @@ however, mean value of the file is a bit more valuable property. Once means of
 every property for every file are known, correlation between those can be
 visualised and measured.
 
-Pearson correlation for energy--magnitude is $0.9955$
-(fig.~\ref{fig:aggr_e-m}), for energy--ZCR is $-0.6041$
-(fig.~\ref{fig:aggr_e-z}) and magnitude--ZCR is $-0.6281$
+Pearson correlation for energy--magnitude is $\correlationem$
+(fig.~\ref{fig:aggr_e-m}), for energy--ZCR is $\correlationez$
+(fig.~\ref{fig:aggr_e-z}) and magnitude--ZCR is $\correlationmz$
 (fig.~\ref{fig:aggr_m-z}).
 
 \begin{figure}
@@ -151,26 +155,34 @@ Pearson correlation for energy--magnitude is $0.9955$
     \caption{Aggregated data}\label{fig:aggr}
 \end{figure}
 
-\subsubsection{Classification}
+\subsubsection{Training and test set}
 
-Our goal is to apply \naive Bayes classification to the data set, and decide
+The goal is to apply \naive Bayes classification to the data set, and decide
 the class of the unknown file, whether it is silence or speech. We (strongly)
 assume that neither of the properties that we are using in the classification
-are dependant. For the first run let us close our eyes to the $0.995$ linear
-correlation between energy and magnitude, run the analysis and measure the
-performance. Later the most conflicting metric will be discarded, learning and
-analysis will be re-ran, and performance will be compared.
+are dependant. For the first run let us close our eyes to the
+\correlationem linear correlation between energy and magnitude, run the
+analysis and measure the performance. Later the most conflicting metric will be
+discarded, learning and analysis will be re-ran, and performance will be
+compared.
+
+It will be done as follows: it is given 100 audio samples, 50 with silence and
+50 with speech. A single test run takes first 5 samples of silence, first 5
+samples of silence, applies idiot Bayes model\cite{idiotbayes} and gets the
+probability of the sample being silence or speech.
+
+\subsubsection{Classification}
 
 Given an unknown file probability of it being silence or speech is the same:
 
 $$ P(silence) = P(speech) = 0.5 $$
 
 It is possible to determine probability distribution of $P(C|E)$, $P(C|M)$,
-$P(C|Z)$. Our goal is to calculate $ P(silence | E, M, Z) $ from that data. In
-other words, calculate probability of the file being silence, given energy,
-magnitude and ZCR, given our training set. In order to get $P(cause|effect)$
-(in this case cause is energy, magnitude and ZCR, and effect is silence or
-speech), we have to apply Bayes and chain rules:
+$P(C|Z)$. Our goal is to calculate $ P(C | E, M, Z), C = \left\{ silence,
+speech \right\}$ from that data. In other words, calculate probability of the
+file being silence, given energy, magnitude and ZCR, given our training set. In
+order to get $P(cause|effect)$ (in this case cause is energy, magnitude and
+ZCR, and effect is silence or speech), we have to apply Bayes and chain rules:
 
 \begin{align}
    & P(C | E, M, Z) = \\
@@ -191,15 +203,29 @@ mentioned before, we believe that all properties -- energy, magnitude and ZCR
 expression using \naive Bayesian classifier.
 
 $P(C)$ is known to be $0.5$, because it is known that exactly half of the files
-are speech, and the other half are silence. Given $\sigma^{2}$ is standard
-deviation of energy values in the given class, and $\mu$ is the mean of the
-same set of values, Normal probability distribution can be calculated as
+are speech, and the other half are silence. It is trivial to calculate
+$\sigma_{c}^{2}$, standard deviation of energy values in the given class, and
+$\mu_{c}$ is the mean of the same set of values. Now suppose we have a value of
+energy $v$ and want to calculate the probability distribution of it being in
+class silence or speech. Normal probability distribution can be calculated as
 follows:
 
 $$
-P(E = v|C) = \frac{1}{\sqrt{2 \pi \sigma^{2}}}
-e ^{- \frac{ (v - \mu)^2 }{2 \sigma^2} }
+P(E = v|C) = \frac{1}{\sqrt{2 \pi \sigma_{c}^{2}}}
+e ^{- \frac{ (v - \mu_{c})^2 }{2 \sigma^2} }
 $$
 
+Now 
 
+
+\clearpage
+\begin{thebibliography}{9}
+
+    \bibitem{idiotbayes}
+        Russell, Stuart J.; Norvig, Peter (2003),
+        \emph{Artificial Intelligence: A Modern Approach (2nd ed.)},
+        Upper Saddle River, New Jersey: Prentice Hall,
+        ISBN 0-13-604259-4, p. 499.
+
+\end{thebibliography}
 \end{document}

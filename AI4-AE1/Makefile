@@ -15,11 +15,11 @@ res/aggr_%.pdf: samples/summary.txt plot.sh res
 res/sample_%.pdf: laboratory.dat sensing.py res
 	./sensing.py $* $<
 
-report.pdf: report.tex res/predictions.pdf res/prediction_table.tex \
+report.pdf: report.tex res/predictions.pdf res/report_data.tex \
 	$(AGGR_PLOTS) $(SAMPLE_PLOTS)
 	while (pdflatex report; grep -q "Rerun to" report.log) do true; done
 
-res/predictions.pdf res/prediction_table.tex: samples/summary.txt report.py res
+res/predictions.pdf res/report_data.tex: samples/summary.txt report.py res
 	./report.py $<
 
 samples:

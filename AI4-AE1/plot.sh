@@ -6,7 +6,7 @@ set terminal pdf
 set output 'res/aggr_e-m.pdf'
 set xlabel "Energy"
 set ylabel "Magnitude"
-set key left top
+set key left top box
 plot "< grep ^silence samples/summary.txt" using 2:3 title "Silence", \
     "< grep ^speech samples/summary.txt" using 2:3 title "Speech"
 EOF
@@ -14,7 +14,7 @@ EOF
 
 E_Z=$(cat <<EOF
 set terminal pdf
-set key off
+set key left bottom box
 set output 'res/aggr_e-z.pdf'
 set xlabel "Energy"
 set ylabel "ZCR"
@@ -25,7 +25,7 @@ EOF
 
 M_Z=$(cat <<EOF
 set terminal pdf
-set key off
+set key left bottom box
 set output 'res/aggr_m-z.pdf'
 set xlabel "Magnitude"
 set ylabel "ZCR"

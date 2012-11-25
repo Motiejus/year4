@@ -5,10 +5,11 @@ import sys
 import os
 import operator
 
+from scipy.stats.stats import pearsonr
 import numpy as np
 import matplotlib
 
-from analyze import execute
+from analyze import read, execute
 
 def main(filename):
     """Output resources needed for the report.
@@ -19,17 +20,34 @@ def main(filename):
 
     Output:
         ./res/predictions.pdf
-        ./res/prediction_table.tex
+        ./res/report_data.tex
     """
+    workable = read(filename)
     data = execute(filename)
 
     matplotlib.use('Agg')
     bar = produce_bar(data)
     bar.savefig('./res/predictions.pdf')
 
-    output = produce_table(data)
-    with open('./res/prediction_table.tex', 'w') as f:
-        f.write(output)
+    table = produce_table(data)
+    correlations = produce_correlations(workable)
+    with open('./res/report_data.tex', 'w') as f:
+        f.write(table)
+        f.write("\n\n")
+        f.write(correlations)
+        f.write("\n")
+
+def produce_correlations(w):
+    e = [d['e'] for d in w['silence']] + [d['e'] for d in w['speech']]
+    m = [d['m'] for d in w['silence']] + [d['m'] for d in w['speech']]
+    z = [d['z'] for d in w['silence']] + [d['z'] for d in w['speech']]
+    return (
+            "\\newcommand{\\correlationem}{%.4f}\n"
+            "\\newcommand{\\correlationez}{%.4f}\n"
+            "\\newcommand{\\correlationmz}{%.4f}\n") % \
+                    (pearsonr(e, m)[0], pearsonr(e, z)[0], pearsonr(m, z)[0])
+
+
 
 def produce_bar(data):
     silence = aggregate(data, 'silence')
@@ -66,7 +84,14 @@ def produce_table(data):
     incorrect |  %s  |    %s    |    %s    |  %s
     """ % (fmt('speech', 'ok') + fmt('silence', 'ok') +
             fmt('speech', 'err') + fmt('silence', 'err'))
-    return ret
+
+    ret = ("\\begin{tabular}{c | c}\n"
+            "\\hline\n"
+            "speech & silence \\\\ \\hline\n"
+            "\\hline\n"
+            "\\end{tabular}")
+
+    return "\\newcommand{\\correlationtable}{\n%s\n}" % ret
 
 
 def aggregate(data, c):
