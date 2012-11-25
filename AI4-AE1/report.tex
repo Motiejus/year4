@@ -10,6 +10,7 @@
 \usepackage[nottoc,numbib]{tocbibind}
 \usepackage{hyperref}
 \newcommand{\naive}{na\"{\i}ve\ }
+\numberwithin{equation}{section}
 
 \input{res/report_data.tex}
 
@@ -37,8 +38,8 @@ TODO
 There were 100 audio files given: 50 containing silence, and 50 containing
 speech. The purpose of the exercise was to create a system which predicts the
 class of a given audio file (silence or speech) using a training set. The
-system was created and evaluated. Its performance is described in this
-document.
+system was created and evaluated. How it works and its performance is described
+in this document.
 
 \subsection{Performance}
 Performance measure of the agent by the success rate of the matching
@@ -46,8 +47,8 @@ process. The more files are correctly assigned to the silence or speech
 category, the better the performance.
 
 \subsection{Environment}
-Agent operates in Telephone Exchange or any environment which requires
-distinction between silence and speech in a sound file.
+Agent operates in any environment which requires distinction between silence
+and speech in a sound file. Most typically it is Telephone Exchange.
 
 \subsection{Actuators}
 Actuators for this agent are computer screen or output file. This agent is
@@ -74,17 +75,16 @@ This work consisted of two sub-tasks:
 
 \subsubsection{Extracting Energy, Magnitude, ZCR}
 
-At first a program was made which can extract energy, magnitude and ZCR. This
-is the first step in sensing: extract necessary properties from raw data. In
-this work all three properties were calculated using a window of 240 samples.
-Here you will find energy, magnitude and ZCR described. Each property has an
-associated figure with a provided sample.
+At first a program was made which can extract energy, magnitude and ZCR from a
+given audio file. This is the first step in sensing: extract necessary
+properties from raw data. In this work all three properties were calculated
+using a window of 240 samples (in all the equations below, $w$ is a rectangular
+window, $n$ is $240$). Here you will find energy, magnitude and ZCR described.
+Each property has an associated figure with a provided sample.
 
 Energy (fig.~\ref{fig:sample_e}) is calculated as follows:
 
 $$ E[n] = \sum_{k=-\infty}^{\infty} s^2[k] \cdot w[n-k] $$
-
-Where $n$ is the sample number and $w$ is a rectangular window.
 
 Magnitude (fig.~\ref{fig:sample_m}):
 
@@ -97,6 +97,9 @@ $$
         \sum_{k=-\infty}^{\infty}
         |sign(s[k]) - sign(s[k-1])| \cdot w[n-m]
 $$
+
+Implementations of these fuctions can be found in a file TODO in
+appendix TODO.
 
 \begin{figure}
     \centering
@@ -161,7 +164,7 @@ The goal is to apply \naive Bayes classification to the data set, and decide
 the class of the unknown file, whether it is silence or speech. We (strongly)
 assume that neither of the properties that we are using in the classification
 are dependant. For the first run let us close our eyes to the
-\correlationem linear correlation between energy and magnitude, run the
+$\correlationem$ linear correlation between energy and magnitude, run the
 analysis and measure the performance. Later the most conflicting metric will be
 discarded, learning and analysis will be re-ran, and performance will be
 compared.
@@ -169,11 +172,12 @@ compared.
 It will be done as follows: it is given 100 audio samples, 50 with silence and
 50 with speech. A single test run takes first 5 samples of silence, first 5
 samples of silence, applies idiot Bayes model\cite{idiotbayes} and gets the
-probability of the sample being silence or speech.
+probability of the sample being silence or speech. There will be 10 test
+executions, so every file will be assigned a probabilty distribution.
 
 \subsubsection{Classification}
 
-Given an unknown file probability of it being silence or speech is the same:
+Probability of an unknown file being silence or speech is the same:
 
 $$ P(silence) = P(speech) = 0.5 $$
 
@@ -198,25 +202,30 @@ Getting to equation~\ref{eq:chain_rule} is just applying chain rule. Since the
 equation denominator is a constant (does not depend on $C$), it is equal in
 both classes (silence and speech), and hence we assign it a new name $\alpha$.
 Getting to equation~\ref{eq:independence} is slightly more interesting. Like
-mentioned before, we believe that all properties -- energy, magnitude and ZCR
--- are conditionally independent. For that reason we can simplify the mentioned
-expression using \naive Bayesian classifier.
+mentioned before, we assume that all properties -- energy, magnitude and ZCR --
+are conditionally independent. For that reason we can simplify the mentioned
+expression using \naive Bayesian classifier and $P(K | C, \mathbf{x})$ becomes
+$P(K|C)$ ($K = \left\{E, M, Z\right\}, C = \left\{ silence, speech \right\}$).
 
-$P(C)$ is known to be $0.5$, because it is known that exactly half of the files
-are speech, and the other half are silence. It is trivial to calculate
-$\sigma_{c}^{2}$, standard deviation of energy values in the given class, and
-$\mu_{c}$ is the mean of the same set of values. Now suppose we have a value of
-energy $v$ and want to calculate the probability distribution of it being in
-class silence or speech. Normal probability distribution can be calculated as
-follows:
+$P(C)$ is $0.5$, because it is known that exactly half of the files are speech,
+and the other half are silence. It is trivial to calculate $\sigma_{c}^{2}$,
+standard deviation of energy values in the given class, and $\mu_{c}$ is the
+mean of the same set of values. Now suppose we have a value of energy $v$ and
+want to calculate the probability distribution of it being in class silence or
+speech. Normal probability distribution for property $K = \left\{E, M,
+Z\right\}$ can be calculated as follows:
 
 $$
-P(E = v|C) = \frac{1}{\sqrt{2 \pi \sigma_{c}^{2}}}
+P(K = v|c) = \frac{1}{\sqrt{2 \pi \sigma_{c}^{2}}}
 e ^{- \frac{ (v - \mu_{c})^2 }{2 \sigma^2} }
 $$
 
-Now 
+Now just calculating values of $P(C=silence| E, M, Z)$ are just putting the
+numbers into equation \ref{eq:independence}. This explanation completes the
+theory how to get a probability distribution of an unknown file. Now some
+experiment results will be presented.
 
+\section{Experiments}
 
 \clearpage
 \begin{thebibliography}{9}
