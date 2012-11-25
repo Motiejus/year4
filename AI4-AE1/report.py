@@ -35,7 +35,7 @@ def main(filename):
         f.write(table)
         f.write("\n\n")
         f.write(correlations)
-        f.write("\n")
+
 
 def produce_correlations(w):
     e = [d['e'] for d in w['silence']] + [d['e'] for d in w['speech']]
@@ -73,21 +73,35 @@ def produce_table(data):
     def fmt(c, b):
         if len(data2[c][b]):
             avg, std = np.average(data2[c][b]), np.std(data2[c][b])
-            return "$%.5f$" % avg, "$%.5f$" % std
+            return "%.5f" % avg, "%.5f" % std
         else:
             return "   -   ", "   -   "
 
-    ret = ("\\begin{tabular}{r | c | c || c | c |}\n"
+    corr_data = (
+            "\\newcommand{\\sicorrectmean}{%s}\n"
+            "\\newcommand{\\sicorrectstddev}{%s}\n"
+            "\\newcommand{\\spcorrectmean}{%s}\n"
+            "\\newcommand{\\spcorrectstddev}{%s}\n"
+            "\\newcommand{\\siincorrectmean}{%s}\n"
+            "\\newcommand{\\siincorrectstddev}{%s}\n"
+            "\\newcommand{\\spincorrectmean}{%s}\n"
+            "\\newcommand{\\spincorrectstddev}{%s}\n\n") % \
+                    (fmt('speech', 'ok') + fmt('silence', 'ok') +
+                            fmt('speech', 'err') + fmt('silence', 'err'))
+
+    corr_table = ("\\begin{tabular}{r | c | c || c | c |}\n"
             "\\cline{2-5}\n"
             "& \\multicolumn{2}{|c||}{silence} "
             "& \\multicolumn{2}{c|}{speech}\\\\ \\cline{2-5}\n"
             "& mean & stddev & mean & stddev \\\\ \\hline\n"
-            "correct samples & %s & %s & %s & %s \\\\ \\hline\n"
-            "incorrect samples & %s & %s & %s & %s \\\\ \\hline\n"
-            "\\end{tabular}") % (fmt('speech', 'ok') + fmt('silence', 'ok') +
-            fmt('speech', 'err') + fmt('silence', 'err'))
-
-    return "\\newcommand{\\correlationtable}{\n%s\n}" % ret
+            "correct samples "
+            "& $\\sicorrectmean$ & $\\sicorrectstddev$ "
+            "& $\\spcorrectmean$ & $\\spcorrectstddev$ \\\\ \\hline\n"
+            "incorrect samples "
+            "& $\\siincorrectmean$ & $\\siincorrectstddev$ "
+            "& $\\spincorrectmean$ & $\\spincorrectstddev$ \\\\ \\hline\n"
+            "\\end{tabular}")
+    return corr_data + ("\\newcommand{\\correlationtable}{\n%s\n}" % corr_table)
 
 
 def aggregate(data, c):
