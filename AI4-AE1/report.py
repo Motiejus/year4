@@ -72,24 +72,20 @@ def produce_table(data):
             'speech': aggregate(data, 'speech')}
     def fmt(c, b):
         if len(data2[c][b]):
-            avg, std = np.average(data2[c][b]*100), np.std(data2[c][b]*100)
-            return "%2.7f" % avg, "%2.7f" % std
+            avg, std = np.average(data2[c][b]), np.std(data2[c][b])
+            return "$%.5f$" % avg, "$%.5f$" % std
         else:
             return "   -   ", "   -   "
 
-    ret = """
-                    speech              silence
-              | mean       |  stddev        |   mean         | stddev
-    correct   |  %s  |    %s    |    %s    |  %s
-    incorrect |  %s  |    %s    |    %s    |  %s
-    """ % (fmt('speech', 'ok') + fmt('silence', 'ok') +
+    ret = ("\\begin{tabular}{r | c | c || c | c |}\n"
+            "\\cline{2-5}\n"
+            "& \\multicolumn{2}{|c||}{silence} "
+            "& \\multicolumn{2}{c|}{speech}\\\\ \\cline{2-5}\n"
+            "& mean & stddev & mean & stddev \\\\ \\hline\n"
+            "correct samples & %s & %s & %s & %s \\\\ \\hline\n"
+            "incorrect samples & %s & %s & %s & %s \\\\ \\hline\n"
+            "\\end{tabular}") % (fmt('speech', 'ok') + fmt('silence', 'ok') +
             fmt('speech', 'err') + fmt('silence', 'err'))
-
-    ret = ("\\begin{tabular}{c | c}\n"
-            "\\hline\n"
-            "speech & silence \\\\ \\hline\n"
-            "\\hline\n"
-            "\\end{tabular}")
 
     return "\\newcommand{\\correlationtable}{\n%s\n}" % ret
 
