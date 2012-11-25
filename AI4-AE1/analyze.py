@@ -15,13 +15,13 @@ def main(filename):
 
         Filename, % silence, % speech
     """
-    data = execute(sys.argv[1])
+    data = execute(sys.argv[1], "emz")
     ret = [(fn, d['silence'], d['speech']) for fn, d in data.items()]
     for item in sorted(ret):
         print ("%s\t%f\t%f" % item)
 
 
-def execute(filename):
+def execute(filename, classes):
     """Do the training + estimation. Return probabilities of silence and speech.
     
     Output format:
@@ -38,7 +38,7 @@ def execute(filename):
             test_set += items[lower:lower+5]
             training_set[category] = items[:lower] + items[lower+5:]
         for item in test_set:
-            ret[item['_fn']] = posterior(training_set, item)
+            ret[item['_fn']] = posterior(training_set, item, classes)
     return ret
 
 
@@ -65,7 +65,7 @@ def read(filename):
     return ret
 
 
-def posterior(workable, measurement):
+def posterior(workable, measurement, classes):
     """Return posterior probability of given measurement with learned stats
 
     workable is the array returned by read/1
@@ -78,7 +78,7 @@ def posterior(workable, measurement):
         Where silence + float add up to 1 (normalized).
 
     Assume probabilities for speech and silence are 0.5"""
-    stats = make_stats(workable)
+    stats = make_stats(workable, classes)
     ret = {}
     for category, items in stats.items():
         p = 0.5 # prior probability of getting into this class
@@ -106,8 +106,11 @@ def normalize(d):
     return d
 
 
-def make_stats(workable):
+def make_stats(workable, classes):
     """Take workable array (returned by read/1) and produce statistics
+
+    Classes: list of classes which we want to take into account. Normally
+    ['e', 'm', 'z'] or ['e', 'z']
     
     Output format:
         {
@@ -122,7 +125,7 @@ def make_stats(workable):
     ret = {}
     for category, measurements in workable.items():
         ret[category] = {}
-        for stat in "emz":
+        for stat in classes:
             if stat not in ret[category]:
                 ret[category][stat] = {}
             acc = [measurement[stat] for measurement in measurements]

@@ -10,6 +10,7 @@
 \usepackage[nottoc,numbib]{tocbibind}
 \usepackage{hyperref}
 \newcommand{\naive}{na\"{\i}ve\ }
+\newcommand{\Naive}{Na\"{\i}ve\ }
 \numberwithin{equation}{section}
 
 \input{res/report_data.tex}
@@ -124,6 +125,7 @@ appendix TODO.
 \end{figure}
 
 \subsubsection{Aggregating sample data}
+\label{sec:aggregating}
 
 Once it was possible to calculate energy, magnitude and ZCR, it was necessary
 to aggregate the data. A value by itself does not give much information,
@@ -173,7 +175,7 @@ It will be done as follows: it is given 100 audio samples, 50 with silence and
 50 with speech. A single test run takes first 5 samples of silence, first 5
 samples of silence, applies idiot Bayes model\cite{idiotbayes} and gets the
 probability of the sample being silence or speech. There will be 10 test
-executions, so every file will be assigned a probabilty distribution.
+executions, so every file will be assigned a probability distribution.
 
 \subsubsection{Classification}
 
@@ -227,6 +229,8 @@ experiment results will be presented.
 
 \section{Experiments}
 
+\subsection{\Naive Bayesian classification using Energy, Magnitude and ZCR}
+
 \begin{figure}
     \centering
     \includegraphics[width=0.5\textwidth]{res/predictions.pdf}
@@ -238,18 +242,59 @@ Like it can be seen in figure~\ref{fig:simple_performance}, all records with
 silence were predicted properly, but five records with speech were
 mis-predicted as silence. See more details about performance in
 table~\ref{tab:correlation_table}. Value in "silence correct mean" means that
-the average correct prediction for a silence sample is $\sicorrectmean$. This
+the average correct prediction for a silence sample is $\sicorrectmeanemz$. This
 means that our Bayesian classifier was quite determined about the class of the
 file. However, value in "speech incorrect classifications" means that actual
 speech samples were given average probability being speech of
-$\spincorrectmean$.
+$\spincorrectmeanemz$. It is quite easy to see the five mispredicted files in
+figure~\ref{fig:aggr}.
 
 \begin{figure}
     \centering
-    \caption{Correlation table}
-    \correlationtable
-    \label{tab:correlation_table}
+    \caption{Correlation table using Energy, Magnitude and ZCR}
+    \correlationtableemz
+    \label{tab:correlation_table_emz}
 \end{figure}
+
+\subsection{\Naive Bayesian classification using Energy and ZCR}
+
+Like mentioned in section~\ref{sec:aggregating}, energy and magnitude have very
+high correlation. Even for \naive Bayesian classification I think using two
+properties with Pearson correlation $\correlationem$ is too much. In this
+section one of these classifiers is removed, the same experiment is re-done,
+and performance is re-evaluated. Which parameter of those two should be
+removed? Energy or magnitude? Because Energy-ZCR correlation is lower than
+Magnitude-ZCR, magnitude is removed. That way we have lower correlation between
+the two variables.
+
+Table~\ref{tab:correlation_table_ez} shows the performance of the new matching
+algorithm which uses only Energy and ZCR. It is not much different than using
+three of them, however, it yields slightly better performance in estimating
+speech. In other words, it gives higher probability for speech records. On the
+other hand, new algorithm returns a slightly smaller probability for silence
+prediction (though it still correctly predicts silence).
+
+\begin{figure}
+    \centering
+    \caption{Correlation table using Energy and ZCR}
+    \correlationtableez
+    \label{tab:correlation_table_ez}
+\end{figure}
+
+\section{Conclusions}
+
+This report describes an experiment which uses \naive Bayes classification
+to decide whether a given audio file is silence or speech. Performance of the
+algorithm using sample data is $95\%$.
+
+There have been two experiments. First one used Energy, Magnitude and ZCR for
+classification. The second one used only Energy and Magnitude. Performance of
+the second algorithm is the same as the first one. However, if we include the
+level of uncertainty for wrong estimations as performance measurement, second
+experiment yielded slightly better results. In other words, the second algorithm
+was "by tiny fraction less wrong".
+
+\section{Appendix}
 
 \clearpage
 \begin{thebibliography}{9}

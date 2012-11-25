@@ -23,16 +23,20 @@ def main(filename):
         ./res/report_data.tex
     """
     workable = read(filename)
-    data = execute(filename)
+    data1 = execute(filename, "emz")
+    data2 = execute(filename, "ez")
 
     matplotlib.use('Agg')
-    bar = produce_bar(data)
+    bar = produce_bar(data1)
     bar.savefig('./res/predictions.pdf')
 
-    table = produce_table(data)
+    table1 = produce_table(data1, "emz")
+    table2 = produce_table(data2, "ez")
     correlations = produce_correlations(workable)
     with open('./res/report_data.tex', 'w') as f:
-        f.write(table)
+        f.write(table1)
+        f.write("\n")
+        f.write(table2)
         f.write("\n\n")
         f.write(correlations)
 
@@ -67,7 +71,7 @@ def produce_bar(data):
     return fig
 
 
-def produce_table(data):
+def produce_table(data, suffix):
     data2 = {'silence': aggregate(data, 'silence'),
             'speech': aggregate(data, 'speech')}
     def fmt(c, b):
@@ -78,19 +82,19 @@ def produce_table(data):
             return "   -   ", "   -   "
 
     corr_data = (
-            "\\newcommand{\\sicorrectnum}{%d}\n"
-            "\\newcommand{\\spcorrectnum}{%d}\n"
-            "\\newcommand{\\siincorrectnum}{%d}\n"
-            "\\newcommand{\\spincorrectnum}{%d}\n"
+            "\\newcommand{\\sicorrectnumSUFFIX}{%d}\n"
+            "\\newcommand{\\spcorrectnumSUFFIX}{%d}\n"
+            "\\newcommand{\\siincorrectnumSUFFIX}{%d}\n"
+            "\\newcommand{\\spincorrectnumSUFFIX}{%d}\n"
 
-            "\\newcommand{\\sicorrectmean}{%s}\n"
-            "\\newcommand{\\sicorrectstddev}{%s}\n"
-            "\\newcommand{\\spcorrectmean}{%s}\n"
-            "\\newcommand{\\spcorrectstddev}{%s}\n"
-            "\\newcommand{\\siincorrectmean}{%s}\n"
-            "\\newcommand{\\siincorrectstddev}{%s}\n"
-            "\\newcommand{\\spincorrectmean}{%s}\n"
-            "\\newcommand{\\spincorrectstddev}{%s}\n\n") % \
+            "\\newcommand{\\sicorrectmeanSUFFIX}{%s}\n"
+            "\\newcommand{\\sicorrectstddevSUFFIX}{%s}\n"
+            "\\newcommand{\\spcorrectmeanSUFFIX}{%s}\n"
+            "\\newcommand{\\spcorrectstddevSUFFIX}{%s}\n"
+            "\\newcommand{\\siincorrectmeanSUFFIX}{%s}\n"
+            "\\newcommand{\\siincorrectstddevSUFFIX}{%s}\n"
+            "\\newcommand{\\spincorrectmeanSUFFIX}{%s}\n"
+            "\\newcommand{\\spincorrectstddevSUFFIX}{%s}\n\n") % \
                     ((
                         len(data2['silence']['ok']),
                         len(data2['speech']['ok']),
@@ -106,17 +110,21 @@ def produce_table(data):
             "& \\multicolumn{3}{c|}{speech}\\\\ \\cline{2-7}\n"
             "& len & mean & stddev & len & mean & stddev \\\\ \\hline\n"
             "correct classifications "
-            "& $\\sicorrectnum$ "
-            "& $\\sicorrectmean$ & $\\sicorrectstddev$ "
-            "& $\\spcorrectnum$ "
-            "& $\\spcorrectmean$ & $\\spcorrectstddev$ \\\\ \\hline\n"
+            "& $\\sicorrectnumSUFFIX$ "
+            "& $\\sicorrectmeanSUFFIX$ & $\\sicorrectstddevSUFFIX$ "
+            "& $\\spcorrectnumSUFFIX$ "
+            "& $\\spcorrectmeanSUFFIX$ & $\\spcorrectstddevSUFFIX$ "
+            "\\\\ \\hline\n"
             "incorrect classifications "
-            "& $\\siincorrectnum$ "
-            "& $\\siincorrectmean$ & $\\siincorrectstddev$ "
-            "& $\\spincorrectnum$ "
-            "& $\\spincorrectmean$ & $\\spincorrectstddev$ \\\\ \\hline\n"
+            "& $\\siincorrectnumSUFFIX$ "
+            "& $\\siincorrectmeanSUFFIX$ & $\\siincorrectstddevSUFFIX$ "
+            "& $\\spincorrectnumSUFFIX$ "
+            "& $\\spincorrectmeanSUFFIX$ & $\\spincorrectstddevSUFFIX$ "
+            "\\\\ \\hline\n"
             "\\end{tabular}")
-    return corr_data + ("\\newcommand{\\correlationtable}{\n%s\n}" % corr_table)
+    corr_table = ("\\newcommand{\\correlationtableSUFFIX}{\n%s\n}" % corr_table)
+
+    return (corr_data + corr_table).replace("SUFFIX", suffix)
 
 
 def aggregate(data, c):
