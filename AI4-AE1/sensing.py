@@ -10,7 +10,7 @@ from collections import deque
 from math import log
 import numpy as np
 
-WINDOW_SIZE = 300
+WINDOW_SIZE = 240
 
 def energy(samples, window_sz):
     window = deque([0]*window_sz, window_sz)
