@@ -45,8 +45,8 @@ experiment report and source files used to achieve it.
 There were 100 audio files given: 50 containing silence, and 50 containing
 speech. The purpose of the exercise was to create a system which predicts the
 class of a given audio file (silence or speech) using a training set. The
-system was created and evaluated. How it works and its performance is described
-in this document.
+system was created and evaluated. Its workings and performance is described in
+this document.
 
 \subsection{Performance}
 Performance measure of the agent by the success rate of the matching
@@ -68,7 +68,7 @@ Since this agent is purely software agent, its sensors are sound files.
 
 \section{Theory}
 
-This work consisted of two sub-tasks:
+This work consists of of two sub-tasks:
 \begin{description}
     \item{Sensing:} reading the sample files, extracting energy, magnitude and
         zero crossing rate (later ZCR).
@@ -86,7 +86,7 @@ given audio file. This is the first step in sensing: extract necessary
 properties from raw data. In this work all three properties were calculated
 using a window of 240 samples (in all the equations below, $w$ is a rectangular
 window, $n$ is $240$). Here you will find energy, magnitude and ZCR described.
-Each property has an associated figure with a provided sample.
+Each property has an associated plot with a provided sample.
 
 Energy (fig.~\ref{fig:sample_e}) is calculated as follows:
 
@@ -138,10 +138,10 @@ however, mean value of the file is a bit more valuable property. Once means of
 every property for every file are known, correlation between those can be
 visualised and measured.
 
-Pearson correlation for energy--magnitude is $\correlationem$
-(fig.~\ref{fig:aggr_e-m}), for energy--ZCR is $\correlationez$
-(fig.~\ref{fig:aggr_e-z}) and magnitude--ZCR is $\correlationmz$
-(fig.~\ref{fig:aggr_m-z}).
+For the given data 100 files data set Pearson correlation for energy--magnitude
+is $\correlationem$ (fig.~\ref{fig:aggr_e-m}), for energy--ZCR is
+$\correlationez$ (fig.~\ref{fig:aggr_e-z}) and magnitude--ZCR is
+$\correlationmz$ (fig.~\ref{fig:aggr_m-z}).
 
 \begin{figure}
     \centering
@@ -166,34 +166,32 @@ Pearson correlation for energy--magnitude is $\correlationem$
 \end{figure}
 
 \subsubsection{Training and test set}
-
 The goal is to apply \naive Bayes classification to the data set, and decide
 the class of the unknown file, whether it is silence or speech. We (strongly)
 assume that neither of the properties that we are using in the classification
-are dependant. For the first run let us close our eyes to the
-$\correlationem$ linear correlation between energy and magnitude, run the
-analysis and measure the performance. Later the most conflicting metric will be
-discarded, learning and analysis will be re-ran, and performance will be
-compared.
+are dependant. For the first run let us close our eyes to the $\correlationem$
+linear correlation between energy and magnitude, run the analysis using all
+three properties and measure the performance. In
+section~\ref{sec:classification_energy_zcr} the most conflicting metric will be
+discarded, learning and analysis will be re-ran, and performance of both
+approaches will be compared.
 
 It will be done as follows: it is given 100 audio samples, 50 with silence and
 50 with speech. A single test run takes first 5 samples of silence, first 5
-samples of silence, applies idiot Bayes model\cite{idiotbayes} and gets the
+samples of speech, applies idiot Bayes model\cite{idiotbayes} and gets the
 probability of the sample being silence or speech. There will be 10 test
-executions, so every file will be assigned a probability distribution.
+executions, so every file will have a probability distribution assigned.
 
 \subsubsection{Classification}
-
 Probability of an unknown file being silence or speech is the same:
 
 $$ P(silence) = P(speech) = 0.5 $$
 
-It is possible to determine probability distribution of $P(C|E)$, $P(C|M)$,
-$P(C|Z)$. Our goal is to calculate $ P(C | E, M, Z), C = \left\{ silence,
-speech \right\}$ from that data. In other words, calculate probability of the
-file being silence, given energy, magnitude and ZCR, given our training set. In
-order to get $P(cause|effect)$ (in this case cause is energy, magnitude and
-ZCR, and effect is silence or speech), we have to apply Bayes and chain rules:
+Our goal is to calculate $ P(C | E, M, Z), C = \left\{ silence, speech
+\right\}$ from that data. In other words, calculate probability of the file
+being silence, given energy, magnitude and ZCR, for our training set. In order
+to get $P(cause|effect)$ (in this case cause is energy, magnitude and ZCR, and
+effect is silence or speech), we have to apply Bayes and chain rules:
 
 \begin{align}
    & P(C | E, M, Z) = \\
@@ -214,13 +212,12 @@ are conditionally independent. For that reason we can simplify the mentioned
 expression using \naive Bayesian classifier and $P(K | C, \mathbf{x})$ becomes
 $P(K|C)$ ($K = \left\{E, M, Z\right\}, C = \left\{ silence, speech \right\}$).
 
-$P(C)$ is $0.5$, because it is known that exactly half of the files are speech,
-and the other half are silence. It is trivial to calculate $\sigma_{c}^{2}$,
-standard deviation of energy values in the given class, and $\mu_{c}$ is the
-mean of the same set of values. Now suppose we have a value of energy $v$ and
-want to calculate the probability distribution of it being in class silence or
-speech. Normal probability distribution for property $K = \left\{E, M,
-Z\right\}$ can be calculated as follows:
+It is trivial to calculate $\sigma_{c}^{2}$, variance of energy values in the
+given class, and $\mu_{c}$, the mean of the same set of values. Now suppose we
+have a value of property $\textbf{K}$ $v$ and want to calculate the probability
+distribution of it being in class silence or speech. Normal probability
+distribution for property $K = \left\{E, M, Z\right\}$ can be calculated as
+follows:
 
 $$
 P(K = v|c) = \frac{1}{\sqrt{2 \pi \sigma_{c}^{2}}}
@@ -230,8 +227,8 @@ $$
 Now just calculating values of $P(C=silence| E, M, Z)$ are just putting the
 numbers into equation \ref{eq:independence}. This explanation completes the
 theory how to get a probability distribution of an unknown file. Now some
-experiment results will be presented. This is done in \texttt{analyze.py}
-(listing~\ref{lst:analyze.py}).
+experiment results will be presented. Code for this chapter is in
+\texttt{analyze.py} (listing~\ref{lst:analyze.py}).
 
 \section{Experiments}
 
@@ -247,13 +244,13 @@ experiment results will be presented. This is done in \texttt{analyze.py}
 Like it can be seen in figure~\ref{fig:simple_performance}, all records with
 silence were predicted properly, but five records with speech were
 mis-predicted as silence. See more details about performance in
-table~\ref{tab:correlation_table}. Value in "silence correct mean" means that
-the average correct prediction for a silence sample is $\sicorrectmeanemz$. This
-means that our Bayesian classifier was quite determined about the class of the
-file. However, value in "speech incorrect classifications" means that actual
-speech samples were given average probability being speech of
-$\spincorrectmeanemz$. It is quite easy to see the five mispredicted files in
-figure~\ref{fig:aggr}.
+figure~\ref{tab:correlation_table_emz}. Value in "silence correct mean" means
+that the average correct prediction for a silence sample is
+$\sicorrectmeanemz$. This means that our Bayesian classifier was quite
+determined about the class of the file. However, value in "speech incorrect
+classifications" means that actual speech samples were given average
+probability being speech of $\spincorrectmeanemz$, which is a very poor result.
+It is quite easy to see the five mispredicted files in figure~\ref{fig:aggr}.
 
 \begin{figure}
     \centering
@@ -263,26 +260,28 @@ figure~\ref{fig:aggr}.
 \end{figure}
 
 \subsection{\Naive Bayesian classification using Energy and ZCR}
+\label{sec:classification_energy_zcr}
 
-Like mentioned in section~\ref{sec:aggregating}, energy and magnitude have very
-high correlation. Even for \naive Bayesian classification I think using two
-properties with Pearson correlation $\correlationem$ is too much. In this
+Like mentioned in section~\ref{sec:aggregating}, energy and magnitude are very
+significantly correlated. Even for \naive Bayesian classification I think using
+two properties with Pearson correlation $\correlationem$ is too much. In this
 section one of these classifiers is removed, the same experiment is re-done,
 and performance is re-evaluated. Which parameter of those two should be
 removed? Energy or magnitude? Because Energy-ZCR correlation is lower than
 Magnitude-ZCR, magnitude is removed. That way we have lower correlation between
 the two variables.
 
-Table~\ref{tab:correlation_table_ez} shows the performance of the new matching
-algorithm which uses only Energy and ZCR. It is not much different than using
-three of them, however, it yields slightly better performance in estimating
-speech. In other words, it gives higher probability for speech records. On the
-other hand, new algorithm returns a slightly smaller probability for silence
-prediction (though it still correctly predicts silence).
+Figure~\ref{tab:correlation_table_ez} shows the performance of the new matching
+algorithm which uses only Energy and ZCR. The resulting table is not much
+different than using three classes, however, it yields slightly better
+performance in estimating speech. In other words, it gives higher probability
+for speech records. On the other hand, new algorithm returns a slightly smaller
+probability for silence prediction (though it still correctly predicts
+silence).
 
 \begin{figure}
     \centering
-    \caption{Correlation table using Energy and ZCR}
+    \caption{Correlation table using only Energy and ZCR}
     \correlationtableez
     \label{tab:correlation_table_ez}
 \end{figure}
@@ -310,9 +309,9 @@ compiling the report can be done by typing to the shell:
    \$ make
 }
 
-This includes fetching the sample audio files (payload), running the sensing
-and analysis, plotting the graphs and compiling the report. Resulting file is
-report.pdf.
+This fetches the sample audio files (payload), runs the sensing and analysis,
+plots the graphs and compiles the report. Resulting file is
+\texttt{report.pdf}.
 
 To speed up the process this is possible:
 
@@ -323,7 +322,7 @@ To speed up the process this is possible:
 where \texttt{N} is the number of cores available on the system $+1$.
 
 \subsection{Core programs}
-These files are the core of the program. They do sensing and analysis.
+These files are the core of the program which do sensing and analysis.
 
 \listing{sensing.py}
 \listing{analyze.py}
