@@ -1,0 +1,88 @@
+\documentclass[english,11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{geometry}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{babel}
+\usepackage{amsmath}
+\usepackage[nottoc,numbib]{tocbibind}
+\usepackage{verbatim}
+\usepackage{hyperref}
+\numberwithin{equation}{section}
+\newcommand{\naive}{na\"{\i}ve\ }
+\newcommand{\Naive}{Na\"{\i}ve\ }
+\newcommand{\listing}[1]{
+    \subsubsection{#1}
+    \label{lst:#1}
+    {\small \verbatiminput{#1}}
+}
+
+\begin{document}
+
+\title{Personal Project Report\\
+    Fast Genuine Generalized Consensus (FGGC)}
+\author{Motiejus Jakštys}
+\date{1 January 2013}
+
+\maketitle
+\pagebreak
+\tableofcontents
+\pagebreak
+
+\section{Introduction}
+\subsection{Identification}
+
+This document is the report of Year 4 Personal Project named "Implement and
+test the Fast Genuine Generalized Consensus algorithm for Networks-on-Chip".
+
+\section{Outline}
+
+What is FGGC?
+
+FGGC belongs to the family of Paxos algorithms. Its characteristics are similar
+to Fast Paxos, but with better recovery options.
+
+From abstract[1]:
+
+Consensus is a central primitive for building replicated systems, but its
+latency constitutes a bottleneck. A well-known solution to consensus is Fast
+Paxos. In a recent paper, Lamport enhances Fast Paxos by leveraging the
+commutativity of concurrent commands. The new primitive, called Generalized
+Paxos, reduces the collision rate, and thus the latency of Fast Paxos. However
+if a collision occurs, the latency of Generalized Paxos equals six
+communication steps, which is higher than Fast Paxos. This paper presents FGGC,
+a novel consensus algorithm that reduces recovery delay when a collision occurs
+to one.
+
+\subsection{Motivation}
+
+During the last decade Moore's law had changed the rules of machine
+performance. Clock speeds used to double every three years [reference needed].
+However, recently frequency limits have been reached due to minimum possible
+sizes of the chips. On the other hand, given clock speed limits, number of
+cores on a chip started increasing rapidly. 8-core CPUs are now very common in
+commodity desktop systems, and servers with 24 cores are more and more widely
+deployed [reference needed].
+
+Downside of current approach (SMP or NUMA) is that memory is shared among the
+cores. Every core has its own memory cache, which must be consistent with
+caches of other cores. This requirement increases communication overhead
+between cores solely for cache coherency exponentially as number of cores
+increases. Therefore for many cores (hundreds or thousands) another memory
+management approach is needed.
+
+Tilera is a multi-core machine producer which takes novel other approach in
+memory management. Main (DDR3) memory is shared amongst the cores, however,
+what happens with caches is left completely up to the programmer to decide.
+For example, cache coherency can be turned off completely. A send very low
+latency and high bandwidth messages to other cores or their caches, so
+the need to have consistent memory on all the cores decreases.
+
+With this approach it is more natural to look at every core like to an
+independent worker, or actor, and think about data exchange not using shared
+memory, but sending messages.
+
+It is estimated that within 5 years a chip with 65536 cores will be produced
+[reference needed].
