@@ -18,11 +18,12 @@
     \label{lst:#1}
     {\small \verbatiminput{#1}}
 }
+\newcommand{\fggc}{Fast Genuine Generalized Consensus\ }
 
 \begin{document}
 
 \title{Personal Project Report\\
-    Fast Genuine Generalized Consensus (FGGC)}
+    Implementation and testing the \fggc (FGGC) for Networks-on-Chip}
 \author{Motiejus Jakštys}
 \date{1 January 2013}
 
@@ -58,6 +59,8 @@ to one.
 
 \subsection{Motivation}
 
+\subsubsection{Changes in many-core platforms}
+
 During the last decade Moore's law had changed the rules of machine
 performance. Clock speeds used to double every three years [reference needed].
 However, recently frequency limits have been reached due to minimum possible
@@ -73,16 +76,79 @@ between cores solely for cache coherency exponentially as number of cores
 increases. Therefore for many cores (hundreds or thousands) another memory
 management approach is needed.
 
-Tilera is a multi-core machine producer which takes novel other approach in
+Tilera(r?) is a multi-core machine producer which takes novel approach in
 memory management. Main (DDR3) memory is shared amongst the cores, however,
-what happens with caches is left completely up to the programmer to decide.
-For example, cache coherency can be turned off completely. A send very low
-latency and high bandwidth messages to other cores or their caches, so
-the need to have consistent memory on all the cores decreases.
+what happens with caches is left completely up to the programmer to decide.  If
+tasks in cores are separated and are working on different data sets, then, for
+example, cache coherency can be turned off completely and, where
+synchronization is necessary, program can benefit from User Data Network(?)
+(UDN), which allows sending messages between cores with low latency and high
+bandwidth (sending a [MSG SIZE] message to adjacent core takes only a few ticks,
+which makes total bandwidth over 30Gb/s).
 
-With this approach it is more natural to look at every core like to an
-independent worker, or actor, and think about data exchange not using shared
-memory, but sending messages.
+With this many-core approach is more natural to look at every core like to an
+independent worker, or actor, and design the system which does not use shared
+memory, but sends messages instead. Like discussed, sending messages and not
+having the requirement to have consistent CPU caches decreases performance
+penalty and allows the system to scale.
 
-It is estimated that within 5 years a chip with 65536 cores will be produced
-[reference needed].
+\subsubsection{Synchronization}
+
+With huge number of small cores in the system (It is estimated that within 5
+years a chip with 65536 cores will be produced [reference needed]), error
+detection mechanisms becomes less sophisticated, and some computations might
+become faulty. These faults in computations must be somehow detected by
+software. This is a very good application for Paxos family consensus
+algorithms.
+
+[This statement looks a bit vague. I could try speaking about distributed
+transactions instead, but do they make sense in 64k core machine?]
+
+We decided to implement and evaluate the performance of \fggc on a 64-core
+machine.
+
+\subsection{Language Choice}
+
+The language decision was based on these factors:
+\begin{enumerate}
+    \item Language can run on Tilera64
+    \item How well is it suitable for algorithm implementation
+    \item Performance
+    \item Memory footprint
+\end{enumerate}
+
+Initially Haskell was chosen for the algorithm implementation. It is very
+convenient to program state machines in a functional language; it compiles to
+machine code, which makes it a good candidate for performance. Furthermore, it
+has an llvm compiler, which is a promising sign for portability.
+
+However, after some research it turned out that whole GHC must be ported to
+Tilera64 to able to compile a program. Normal cross-compilation with GHC is not
+possible, and cross-compilator for GHC was not the focus of the project, so it
+was chosen not to be implemented.
+
+Then we considered Erlang, because Erlang was specifically designed for
+distributed systems, so it share the aims of our work, but is also a very
+mature platform.
+
+Erlang is a language based on the  {\em actor model}, characterized by the
+following features:
+
+{\em Concurrency:} Erlang has extremely lightweight processes whose memory
+requirements can vary dynamically. Processes have no shared
+memory\footnote{They do in some circumstances for efficiency reasons, but this
+is completely transparent to the programmer} and communicate by asynchronous
+message passing. 
+
+{\em Distribution:} Erlang is designed to be run in a distributed
+environment: it is as easy to create a process and communicate to
+it on a host node like on a remote node.
+
+Erlang is written in C and requires very standard tools to (cross-)compile and
+run it. Supported platforms includes any Unix system, vxworks, Linux and
+Windows. Older version of Erlang (R13B) has been cross-compiled and ran on
+Tilera Multi-core Development Environment (MDE) version 2. Some patches to the
+build system were necessary to compile newer version of Erlang (R15B02) on the
+version 3 of Tilera MDE. They have been submitted upstream.
+
+\subsection{Erlang on Tilera64}
