@@ -10,9 +10,6 @@
 \usepackage[nottoc,numbib]{tocbibind}
 \usepackage{verbatim}
 \usepackage{hyperref}
-\numberwithin{equation}{section}
-\newcommand{\naive}{na\"{\i}ve\ }
-\newcommand{\Naive}{Na\"{\i}ve\ }
 \newcommand{\listing}[1]{
     \subsubsection{#1}
     \label{lst:#1}
@@ -151,4 +148,46 @@ Tilera Multi-core Development Environment (MDE) version 2. Some patches to the
 build system were necessary to compile newer version of Erlang (R15B02) on the
 version 3 of Tilera MDE. They have been submitted upstream.
 
-\subsection{Erlang on Tilera64}
+Like mentioned before, Erlang language is based on workers, or {\em actors},
+doing different things and communicating with messages. This fits many-core
+programming approach quite well.
+
+\subsection{About Erlang Run Time System (ERTS)}
+
+Under the hood Erlang virtual machine is a bytecode interpreter\footnote{for
+x86 systems there is an optional native code compiler, which aims to improve
+computational performance\cite{hipe}}. Erlang itself is an OS process, which
+main building parts are {\em schedulers} and {\em processes}. Erlang processes
+are light-weight (grow and shrink dynamically) with small memory footprint,
+fast to create and terminate and the scheduling overhead is low. These are
+scheduled by Erlang run-time system. {\em Scheduler} is an OS thread which
+schedules the Erlang processes. By default Erlang creates as many schedulers as
+there are cores available.
+
+An Erlang {\em node} is an Erlang VM instance which can talk to other nodes.
+Several nodes can be on different machines. Nodes can communicate over TCP, SSL
+and unix pipes (default and most popular is TCP). Processes within a node can
+transparently send messages to other processes (semantics are the same as if
+they were sent from the same node), monitor other nodes or processes.
+
+\section{Further topics}
+
+These are left for Erlang part:
+\begin{itemize}
+    \item Erlang on Tilera64
+        \subitem Node communication via UDN
+        \subitem Which node distribution method was chosen and why
+    \item Performance tests on merge sort and embarrassingly parallel program
+    \item UPMARC and why we stopped trying to improve performance
+\end{itemize}
+
+
+\clearpage
+\begin{thebibliography}{9}
+
+    \bibitem{hipe} Konstantinos Sagonas, and Jesper Wilhelmsson \emph{Efficient
+    memory management for concurrent programs that use message passing}.
+    Science of Computer Programming, 62(2):98--121, October 2006.
+
+\end{thebibliography}
+\end{document}
