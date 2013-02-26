@@ -34,8 +34,41 @@ This document is the report of the Machine Learning 4 Assessed Exercise.
 This deliverable is a report of the assessed exercise. It includes the task
 description, model, design of the application and performance evaluation.
 
-\subsection{Problem and solution high-level overview}
+\subsection{High-level overview of problem and solution}
 
 \subsubsection{Problem description}
 
+When user operates a touch-screen device, she is likely to touch inexact
+locations\cite{WeiRogMur}. Errors are not random, which means that, given some
+training data, the pointing accuracy can be improved.
+
+The problem can be tackled by creating user a specific model for her touch
+behaviour and applying a machine learning technique, which can infer the
+intended touch location from the one reported by the device using the training
+data.
+
+For mechanism to work it needs a set of locations where the user intended to
+touch alongside where the user actually touched, reported by the device. That
+can be achieved by a game or some other more or less intrusive way, which is out
+of the scope of this document.
+
+This report describes a machine-learning approach which solves the problem. In
+highest level it learns user behaviour by having some training touch data (300
+touches per user), and then, given a new set of touch coordinates, returns an
+inferred touch location.
+
+The approach adopted in this work is Gaussian Process, which is described in
+detail in \cite{WeiRogMur}.
+
+\clearpage
+
+\begin{thebibliography}{9}
+    \bibitem{WeiRogMur}
+
+    Daryl Weir, Simon Rogers, Markus L\"ochtefeld, and Roderick Murray-Smith. A
+    user-specific machine learning approach for improving touch accuracy on
+    mobile devices. \emph{In Proceedings of the 25th ACM Symposium on User
+    Interface Software and Technology}, 2012.
+
+\end{thebibliography}
 \end{document}
