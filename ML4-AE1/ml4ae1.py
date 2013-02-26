@@ -53,13 +53,6 @@ def get_c(touches, s_star, opts=d_opts):
     return np.array([ret])
 
 
-def get_miu(c_hat, C_hat, z, sigma_sq=d_sigma_sq):
-    N, N = C_hat.shape
-    C_hat_with_noise = C_hat + np.identity(N) * sigma_sq
-    mul2 = np.linalg.inv(C_hat_with_noise)
-    return np.dot(c_hat, np.dot(mul2, z))
-
-
 def get_x_hat(x, opts=d_opts):
     _, _, _, alpha, _ = opts
     return np.concatenate((
@@ -68,26 +61,26 @@ def get_x_hat(x, opts=d_opts):
         ))
 
 
-def predict(touches, targets, s_star):
-    c = get_c(touches, s_star)
-    c_hat = get_x_hat(c)
+def predict(learned, touches_A, s_star):
+    """Predict target from:
+    1. learned (def learn)
+    2. touches_A (touches training set)
+    3. s_star (touch location we want to predict)
 
-    C = get_C(touches)
-    C_hat = get_x_hat(C)
-
-    z = get_z(targets)
-
-    return get_miu(c_hat, C_hat, z)
+    Return (x, y) pair, which is the predicted target.
+    """
+    c_hat = get_x_hat(get_c(touches_A, s_star))
+    return c_hat.dot(learned)
 
 
 def learn(touches, targets, opts):
     """[C_hat + sigma_sq * I] <dot> z
-    
+
     Part of the equation. After multiplying c_hat by resulting matrix,
     you get the prediction"""
-    gamma, b, a, alpha, sigma_sq = opts
-
-    C_hat = get_x_hat(get_C(touches), alpha)
+    _, _, _, _, sigma_sq = opts
+    C_hat = get_x_hat(get_C(touches), opts)
+    N, N = C_hat.shape
     z = get_z(targets)
 
     C_hat_with_noise = C_hat + np.identity(N) * sigma_sq
@@ -107,18 +100,40 @@ def read_file(ifile, keys):
     return data
 
 
-def main(trainingf, testf):
-    touches = read_file(trainingf, ['touchX', 'touchY'])
-    targets = read_file(trainingf, ['targetX', 'targetY'])
+def learn_and_err(touches, targets, k, opts):
+    """Learn and return sum root mean square of error
 
-    test_touches = read_file(testf, ['touchX', 'touchY'])
+    Use [k .. k + 30] as test data"""
+    touches_A = touches[:k] + touches[k + 30:]
+    targets_A = targets[:k] + targets[k + 30:]
 
-    for p, pdata in test_touches.items():
-        for touch in pdata:
-            pred = predict(touches[p], targets[p], touch)
-            print("(%.4f:%.4f) -> (%.4f:%.4f); TODO target" %
-                    (touch[0], touch[1], pred[0], pred[1]))
+    touches_B = touches[k:k + 30]
+    targets_B = targets[k:k + 30]
+
+    l = learn(touches_A, targets_A, opts)
+    error_sq = 0
+    for i, s_star in enumerate(touches_B):
+        s = predict(l, touches_A, s_star)
+        error = (s - targets_B[i])
+        error_sq += np.dot(error.T, error)
+    return error_sq / 30.0
+
+
+def ten_fold_analysis(touches, targets, opts):
+    """Operate on user-device, i.e. list of touches and targets"""
+    error = []
+    for i in range(10):
+        error.append(learn_and_err(touches, targets, i * 30, opts))
+        print ("%d completed, error: %.6f" % (i, error[-1]))
+    return numpy.average(error)
+
+
+def main(trainingf):
+    touches = read_file(trainingf, ['touchX', 'touchY'])['15-Iphone4']
+    targets = read_file(trainingf, ['targetX', 'targetY'])['15-Iphone4']
+
+    ten_fold_analysis(touches, targets, d_opts)
 
 
 if __name__ == '__main__':
-    main('training_data.csv', 'testdata.csv')
+    main('courseworkdata.csv')
