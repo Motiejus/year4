@@ -135,8 +135,8 @@ def ten_fold_analysis(touches, targets, opts):
 
 def main(arr_str):
     #return do_full_learning(trainingf)
-    with open('testdata.csv', 'w') as w:
-        do_full_prediction('courseworkdata.csv', w, arr_str)
+    with open('resultdata.csv', 'w') as w:
+        do_full_prediction('testdata.csv', w, arr_str)
 
 
 def do_full_prediction(trainingf, res, arr_str):
