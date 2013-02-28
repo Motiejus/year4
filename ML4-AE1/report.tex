@@ -2,6 +2,7 @@
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
 \usepackage{graphicx}
+\usepackage{bm}
 \usepackage{geometry}
 \usepackage{caption}
 \usepackage{subcaption}
@@ -52,23 +53,84 @@ touch alongside where the user actually touched, reported by the device. That
 can be achieved by a game or some other more or less intrusive way, which is out
 of the scope of this document.
 
-This report describes a machine-learning approach which solves the problem. In
-highest level it learns user behaviour by having some training touch data (300
-touches per user), and then, given a new set of touch coordinates, returns an
-inferred touch location.
+This report describes a machine-learning approach which solves the problem of
+adjusting the real touch values provided by the device. In highest level it
+learns user behaviour by having some training touch data (300 touches per user),
+and then, given a new set of touch coordinates, returns an inferred touch
+location.
 
 The approach adopted in this work is Gaussian Process, which is described in
-detail in \cite{WeiRogMur}.
+detail in~\cite{WeiRogMur}.
+
+\section{Model}
+
+The was hard to fit to a "standard" prediction model (for example, linear
+or polynomial regression) because of the fact that every touch has two points,
+which are dependant. On the same side we do not want to make strong predictions,
+like these data are independent, so a more complex model is needed.
+
+In the end, Gaussian process was chosen, because \cite{WeiRogMur} claims
+it is accurate enough for this particular task.
+
+Detailed information about Gaussian process can be found in paper~\cite{GP}.
+
+\subsection{Gaussian Process(GP) machinery}
+
+\newcommand{\z}{\textrm{\bf{\v{z}}}}
+\newcommand{\zn}{\textrm{\bf{\v{z}$_n$}}}
+\newcommand{\zm}{\textrm{\bf{\v{z}$_m$}}}
+
+Here is a brief walkthrough of the steps that were implemented in order to get
+the prediction required.
+
+$x^*$ and $y^*$ are values that should be inferred. Further in the paper a
+vector $\z = [x, y]^T$ where $x$ and $y$ are touch values reported by the
+device.
+
+The goal is Gaussian
+distribution of $x^*$ and $y^*$:
+
+$$ (x^*, y^*) \sim \mathcal{N}(\bm{\mu}, \bm{\Psi}) $$
+
+Where
+
+$$ \bm{\mu} = \hat{\textrm{\bf{c}}} [ \hat{\textrm{\bf{C}}} +
+    \sigma^2 \textrm{\bf{I}} ]^{-1} \textrm{\bf{z}}
+$$
+
+$\bm{\mu}$ is the mean and $\bm{\Psi}$ is the variance. Since confidence of
+prediction is not necessary, this value will not be calculated.
+
+GP needs covariance function to work, which defines how similar $\zn$ and $\zm$
+inputs are. It is defined as:
+
+$$ C(\zn, \zm) = b(a \zn^T\zm +
+(1 - a)e^{-\gamma || \zn - \zm ||^2 } )
+$$
+
+For details of the meaning of $a$, $b$, $\gamma$, refer to
+paper~\cite{WeiRogMur}. This paper is concerned how to optimize them for best
+prediction performance.
+
+\subsection{Implementation details}
+
+Paper~\cite{WeiRogMur} defines the rest of machinery neatly enough and in a very
+compact manner, so rest of the formulas are left out of this paper. However,
+there are some things to note.
 
 \clearpage
 
 \begin{thebibliography}{9}
-    \bibitem{WeiRogMur}
 
-    Daryl Weir, Simon Rogers, Markus L\"ochtefeld, and Roderick Murray-Smith. A
-    user-specific machine learning approach for improving touch accuracy on
-    mobile devices. \emph{In Proceedings of the 25th ACM Symposium on User
-    Interface Software and Technology}, 2012.
+    \bibitem{WeiRogMur}
+        Daryl Weir, Simon Rogers, Markus L\"ochtefeld, and Roderick
+        Murray-Smith. A user-specific machine learning approach for improving
+        touch accuracy on mobile devices. \emph{In Proceedings of the 25th ACM
+        Symposium on User Interface Software and Technology}, 2012.
+
+    \bibitem{GP}
+        Rasmussen, C. E., and Williams, C. K. I. \emph{Gaussian Processes for
+        Machine Learning}. MIT Press, 2006.
 
 \end{thebibliography}
 \end{document}
