@@ -7,15 +7,16 @@ import numpy as np
 
 d_gamma = 0.05
 d_b = 10
-d_a = 0.2
+d_a = 0.1
 d_alpha = 0.9
 d_sigma_sq = 1e-3
 d_opts = d_gamma, d_b, d_a, d_alpha, d_sigma_sq
 
 TRAINING = 'courseworkdata.csv'
 TESTDATA = 'testdata.csv'
-RESULTDATA = 'resultdata.csv'
-LEARNING_ARR = 'learning.bin'
+#RESULTDATA = 'resultdata.csv'
+RESULTDATA = 'resultdata-%.2f-%d-%.1f-%.1f-%.3f.csv'
+LEARNING_ARR = 'learning-%.2f-%d-%.1f-%.1f-%.3f.bin'
 
 
 def Cov(sn, sm, opts):
@@ -137,25 +138,32 @@ def ten_fold_analysis(touches, targets, opts):
 
 
 def main():
-    with open(RESULTDATA, 'w') as w:
-        do_full_prediction(w)
+    for a in np.arange(0.02, 0.41, 0.02):
+        opts = d_gamma, d_b, a, d_alpha, d_sigma_sq
+        with open(RESULTDATA % opts, 'w') as w:
+            do_full_prediction(w, opts)
+
+    #for b in np.arange(4, 15, 1):
+    #    opts = d_gamma, b, d_a, d_alpha, d_sigma_sq
+    #    with open(RESULTDATA % opts, 'w') as w:
+    #        do_full_prediction(w, opts)
 
 
-def get_learning_data():
+def get_learning_data(opts):
     try:
-        with open(LEARNING_ARR, 'r') as r:
+        with open(LEARNING_ARR % opts, 'r') as r:
             return pickle.load(r)
     except IOError:
         print ("'%s' not found! Creating. This will take a while..." %
-                LEARNING_ARR)
+                LEARNING_ARR % opts)
     ret = do_full_learning()
-    with open(LEARNING_ARR, 'w') as w:
+    with open(LEARNING_ARR % opts, 'w') as w:
         pickle.dump(ret, w)
     return ret
 
 
-def do_full_prediction(res):
-    learning = get_learning_data()
+def do_full_prediction(res, opts):
+    learning = get_learning_data(opts)
 
     fieldnames = ['sessionID', 'targetX', 'targetY', 'touchX',
             'touchY', 'name', 'phone']
@@ -166,7 +174,7 @@ def do_full_prediction(res):
         for l in csv.DictReader(f):
             subj, n = line_to_np(l, ['touchX', 'touchY'])
             x, y = predict(learning[subj]['learn'], learning[subj]['touches'],
-                    n, d_opts)
+                    n, opts)
             l['targetX'] = "%f" % x
             l['targetY'] = "%f" % y
             writer.writerow(l)
