@@ -1,7 +1,17 @@
 #!/usr/bin/env python
+"""
+Gaussian Process learner for touching.
+
+If reading CSV does not work, see comment in function do_full_prediction.
+
+Motiejus Jakstys, 1003704
+2013-02-28
+
+"""
 
 import csv
 import pickle
+import StringIO
 
 import numpy as np
 
@@ -14,10 +24,13 @@ d_opts = d_gamma, d_b, d_a, d_alpha, d_sigma_sq
 
 TRAINING = 'courseworkdata.csv'
 TESTDATA = 'testdata.csv'
-#RESULTDATA = 'resultdata.csv'
-RESULTDATA = 'resultdata-%.2f-%d-%.1f-%.1f-%.3f.csv'
+RESULTDATA = 'resultdata.csv'
+#RESULTDATA = 'resultdata-%.2f-%d-%.1f-%.1f-%.3f.csv'
 LEARNING_ARR = 'learning-%.2f-%d-%.1f-%.1f-%.3f.bin'
 
+###############################################################################
+### Algorithmic part
+###############################################################################
 
 def Cov(sn, sm, opts):
     def distance(sn, sm):
@@ -93,6 +106,11 @@ def learn(touches, targets, opts):
     return np.dot(np.linalg.inv(C_hat_with_noise), z)
 
 
+###############################################################################
+### Boring part
+###############################################################################
+
+
 def line_to_np(l, keys):
     subj = "%s-%s" % (l['name'].replace("Subject", ""), l['phone'])
     return subj, np.array([[float(l[i]) for i in keys]]).transpose()
@@ -108,45 +126,6 @@ def read_file(ifile, keys):
                 data[subj] = []
             data[subj].append(n)
     return data
-
-
-def learn_and_err(touches, targets, k, opts):
-    """Learn and return sum root mean square of error
-
-    Use [k .. k + 30] as test data"""
-    touches_A = touches[:k] + touches[k + 30:]
-    targets_A = targets[:k] + targets[k + 30:]
-
-    touches_B = touches[k:k + 30]
-    targets_B = targets[k:k + 30]
-
-    l = learn(touches_A, targets_A, opts)
-    error_sq = 0
-    for i, s_star in enumerate(touches_B):
-        s = predict(l, touches_A, s_star, opts)
-        error = (s - targets_B[i])
-        error_sq += np.dot(error.T, error)
-    return error_sq / 30.0
-
-
-def ten_fold_analysis(touches, targets, opts):
-    """Operate on user-device, i.e. list of touches and targets"""
-    error = []
-    for i in range(10):
-        error.append(learn_and_err(touches, targets, i * 30, opts))
-    return np.average(error)
-
-
-def main():
-    for a in np.arange(0.02, 0.41, 0.02):
-        opts = d_gamma, d_b, a, d_alpha, d_sigma_sq
-        with open(RESULTDATA % opts, 'w') as w:
-            do_full_prediction(w, opts)
-
-    #for b in np.arange(4, 15, 1):
-    #    opts = d_gamma, b, d_a, d_alpha, d_sigma_sq
-    #    with open(RESULTDATA % opts, 'w') as w:
-    #        do_full_prediction(w, opts)
 
 
 def get_learning_data(opts):
@@ -171,7 +150,10 @@ def do_full_prediction(res, opts):
 
     writer = csv.DictWriter(res, fieldnames)
     with open(TESTDATA, 'r') as f:
-        for l in csv.DictReader(f):
+        contents = f.read()
+        # if there are some problems with decoding, try removing this line:
+        contents = contents.replace('\r', '\n')
+        for l in csv.DictReader(StringIO.StringIO(contents)):
             subj, n = line_to_np(l, ['touchX', 'touchY'])
             x, y = predict(learning[subj]['learn'], learning[subj]['touches'],
                     n, opts)
@@ -194,16 +176,18 @@ def do_full_learning():
     return ret
 
 
-def training_b():
-    """Train b using 10-fold validation"""
-    touches = read_file(TRAINING, ['touchX', 'touchY'])['15-Iphone4']
-    targets = read_file(TRAINING, ['targetX', 'targetY'])['15-Iphone4']
+def main():
+    #for a in np.arange(0.02, 0.41, 0.02):
+    #    opts = d_gamma, d_b, a, d_alpha, d_sigma_sq
+    #    with open(RESULTDATA % opts, 'w') as w:
+    #        do_full_prediction(w, opts)
+    #for b in np.arange(4, 15, 1):
+    #    opts = d_gamma, b, d_a, d_alpha, d_sigma_sq
+    #    with open(RESULTDATA % opts, 'w') as w:
+    #        do_full_prediction(w, opts)
+    with open(RESULTDATA, 'w') as w:
+        do_full_prediction(w, d_opts)
 
-    for b in np.arange(3, 10.1, 1):
-        opts = list(d_opts)
-        opts[1] = b
-        err = ten_fold_analysis(touches, targets, opts)
-        print("b=%.4f, error: %.7f" % (b, err))
 
 if __name__ == '__main__':
     main()
