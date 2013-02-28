@@ -19,7 +19,7 @@
 
 \title{Machine Learning 4 Assessed Exercise}
 \author{Motiejus Jakštys}
-\date{26 February 2013}
+\date{28 February 2013}
 
 \maketitle
 \pagebreak
@@ -53,26 +53,26 @@ touch alongside where the user actually touched, reported by the device. That
 can be achieved by a game or some other more or less intrusive way, which is out
 of the scope of this document.
 
-This report describes a machine-learning approach which solves the problem of
+This report describes a machine-learning approach, which solves the problem of
 adjusting the real touch values provided by the device. In highest level it
 learns user behaviour by having some training touch data (300 touches per user),
 and then, given a new set of touch coordinates, returns an inferred touch
 location.
 
 The approach adopted in this work is Gaussian Process, which is described in
-detail in~\cite{WeiRogMur}.
+more detail in~\cite{WeiRogMur}.
 
 \section{Model}
 
 The was hard to fit to a "standard" prediction model (for example, linear
 or polynomial regression) because of the fact that every touch has two points,
-which are dependant. On the same side we do not want to make strong predictions,
+which are dependent. On the same side we do not want to make strong predictions,
 like these data are independent, so a more complex model is needed.
 
-In the end, Gaussian process was chosen, because \cite{WeiRogMur} claims
-it is accurate enough for this particular task.
+Paper~\cite{WeiRogMur} claims it is accurate enough for this particular task,
+which was one of the final reason for choosing this model.
 
-Detailed information about Gaussian process can be found in paper~\cite{GP}.
+Detailed information about Gaussian Processes can be found here~\cite{GP}.
 
 \subsection{Gaussian Process(GP) machinery}
 
@@ -115,25 +115,52 @@ prediction performance.
 \subsection{Implementation details}
 
 Paper~\cite{WeiRogMur} defines the rest of machinery neatly enough and in a very
-compact manner, so rest of the formulas are left out of this paper. However,
+compact manner, so rest of the machinery is left out of this paper. However,
 there are some things to note.
 
 $b$, $a$, $\gamma$, $\sigma^2$ are free parameters that have to be pre-set,
 ideally using cross-validation. What is more, paper~\cite{WeiRogMur} provides
 their initial values: $a = 0.1$, $\alpha = 0.9$, $\sigma^2 = 0.001$, $\gamma =
 0.05$, $b = 5$. In order to achieve slightly better results than the original
-paper, cross-validation with different parameters of these values were
-performed. Changing variables $a$ and $b$ yielded slightly better performance.
-In the end, for this data set, these values yield slightly better results: $a =
-0.2$, $b = 10$.
+paper, cross-validation with different values of these parameters was performed.
+In the end for this data set, these values yield slightly best results: $a =
+0.1$, $b = 10$, $\alpha = 0.9$, $\sigma^2 = 0.001$.
 
 \section{Result analysis}
 
-As we can see, average error INSERT VALUE HERE doesn't look too bad. Given that,
-most interesting thing will be once we get this evaluated and compared to the
-class mates!
+Variables $a$ and $b$ were varied using 10-fold analysis.
+Figure~\ref{fig:error_a} shows root mean square of error mean per user with
+varying $a$. Equivalently figure~\ref{fig:error_b} for $b$. This shows quite
+good indication that $a$ should be $0.1$ and $b$ should be $10$.
 
-\clearpage
+In future work it would be useful to test influence of $\gamma$.  Intuitively,
+$\sigma^2$ will not yield better performance, but in $\gamma$ case we can expect
+anything.
+
+\begin{figure}
+    \centering
+    \begin{subfigure}[b]{0.8\textwidth}
+        \includegraphics[width=\textwidth]{error_a}
+        \caption{RMS error varying $a$}
+        \label{fig:error_a}
+    \end{subfigure}
+
+    \begin{subfigure}[b]{0.8\textwidth}
+        \caption{RMS error varying $b$}
+        \includegraphics[width=\textwidth]{error_b}
+        \label{fig:error_b}
+    \end{subfigure}
+    \caption{RMS errors with varying parameters}\label{fig:aggr}
+\end{figure}
+
+
+\section{Conclusions}
+This paper describes machine learning approach based on GP regression in order
+to increase user specific touch accuracy, and that varying free parameters in GP
+can make really big difference.
+
+However, the greatest achievement of the exercise is a working GP regression
+implementation with (subjectively) quite decent performance.
 
 \begin{thebibliography}{9}
 
