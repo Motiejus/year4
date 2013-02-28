@@ -22,7 +22,7 @@ for i in short_resultdata*; do
 done
 
 for f in shrinkdata-*; do
-    awk '{print $1" "sqrt(($1-$3)*($1-$3)+($2-$4)*($2-$4))}' $f \
+    awk '{print $1" "sqrt(($2-$4)*($2-$4)+($3-$5)*($3-$5))}' $f \
         > error${f#shrinkdata-short_resultdata2}
 done
 rm shrinkdata-*
@@ -35,7 +35,7 @@ rm shrinkdata-*
         done
     done
 } > means.txt
-rm error-*
+#rm error-*
 
 grep error-0.05-10 means.txt > means_a.txt
 grep -- -0.1-0.9-0.001.csv means.txt > means_b.txt 
