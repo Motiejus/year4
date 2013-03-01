@@ -1,0 +1,196 @@
+\documentclass[english,11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{geometry}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{babel}
+\usepackage[nottoc,numbib]{tocbibind}
+\usepackage{hyperref}
+\numberwithin{equation}{section}
+
+\begin{document}
+
+\title{Bioinformatics Writing Exercise 2}
+\author{Motiejus Jakštys}
+\date{28 February 2013}
+
+\maketitle
+\pagebreak
+\tableofcontents
+\pagebreak
+
+\section{Introduction}
+
+In this text we overview Next Generation Sequencing Technology. In the beginning
+we introduce what it does and what it is for, briefly how it works and how
+reliable is it. Followed by current users of the technology and reasons for
+using it. In the end my opinion on ethical implications are given.
+
+\section{Introduction to sequencing}
+
+\subsection{What is sequencing}
+
+Genome sequencing is a process of determining organism DNA. In other words,
+given a tissue, goal is to determine the series of ATCG's that form the organism
+DNA.
+
+There are two approaches to sequence DNA: \emph{de novo} and \emph{shotgun}.
+sequencing. I will briefly describe both.
+
+\subsection{Shotgun method sequencing}
+
+Shotgun method sequencing means breaking the DNA strand to many small pieces and
+aligning them to a reference sequence. This method is cheap and fast, however,
+it requires a reference DNA \emph{a priori} in order for it to be decent
+quality.
+
+Sometimes, if reference DNA for the target species does not exist, a similar
+organism can be taken as a reference.
+
+On the other hand, there are ways to align the DNA using shotgun sequencing
+without a reference genome. However, it is significantly lower
+quality~\cite{shotgun}.
+
+Shotgun method allows to make really short reads (75 bp) and get decent quality
+results. Shorter reads means less restrictions to technology and therefore
+cheaper sequencing.
+
+\subsection{\emph{De novo} sequencing}
+
+\emph{De novo} sequencing is when reference DNA does not exist, and DNA must be
+aligned with itself. Because there is nothing to align to, longer reads have
+significant advantage which reasons are out of the scope of this report.
+
+\section{Technology}
+
+Sequencing roughly works as follows. DNA is split into many small pieces which
+are then algorithmically matched together during post-processing stage. Pieces
+of DNA are assembled together by matching overlapping regions. Which means with
+longer reads comes higher quality DNA matches.
+
+Most next generation sequencers, as we can see later, produce relatively short
+sequences, and therefore are used for shotgun method.
+
+\subsection{Sanger method}
+
+Though Sanger method is not "next generation sequencing method", but we will
+introduce it for completeness because of its historical
+importance~\cite{sanger}. Sanger method was quite significant in human genome
+project initial genome assembly. Reads are quite long (averaging 750 bp, up to
+1500 bp). Comparing to other methods (described below), this method yields one
+of the longest reads. Sanger method initially was heavily used in human genome
+project for \emph{de novo} assembly. It costs roughly \$2400-5000 to sequence
+one million base pairs~\cite{ng-comparison}
+
+\subsection{Next generation sequencing}
+
+Sanger method was called "first generation" sequencing method, after which "next
+generation" sequencing methods emerged. Their main properties are ultra high
+throughput and massive parallelism. Notable examples are Pacific Bio (\$2/Mb
+with 2900 mb reads, very expensive equipment), Ion Torrent (\$1/Mb, 200 reads,
+cheaper equipment), Illumina (\$0.05 to \$0.15 per Mb, 50-250 bp
+reads)~\cite{ng-comparison2}.
+
+The method for sequencing highly depends on the application: price, time, base
+pair length and other factors should be taken into account when choosing the
+sequencing method and equipment.
+
+\section{Uses of DNA sequencing}
+
+Users of the sequencing technology are logically organizations that need DNA
+sequences. Most of the users are "biotechnologists", but this label is
+diverse~\cite{biotech}.
+
+Biotechnology is science which is concerned by modifying organisms in order to
+satisfy various human needs. Notable examples are medicine, agriculture,
+bioremediation and education.
+
+Pharmacogenomics is the science which uses DNA to make up his/her response to
+drugs~\cite{pharmacogenomics} and develop new ones/improve existing ones using
+that information.
+
+For agricultural needs DNA is used in order to improve existing crops or animals
+by modifying their DNA in a predicted manner. For instance, to reduce
+vulnerability to harsh environments for certain kinds of crops~\cite{drought}.
+
+Bioremedation is used to adapt or create microorganisms that can be used to
+clean up contaminated environments. One good example is hydrocarbonoclastic
+bacteria (HCCB), which is used for oil degradation in cases of accidental
+gasoline spillage~\cite{oil-degradation}.
+
+DNA sequences are also used by biologists and antropologists in order to trace
+evolution. Aligning DNAs of different species can tell a lot how the species
+evolved.
+
+\section{Ethics}
+
+Since biotechnology is all about modifying living organisms, it is seen as a
+very intrusive human action to the "laws of nature". Topic of direct genome
+manipulation of organisms is highly contraversal~\cite{food}, especially for
+modifying plants for food purposes.
+
+In the future good knowledge of DNA and its mechanisms will arguably techically
+allow to make predictable changes in our offspring. This is going to be very
+controversial when this happens, too.
+
+In my opinion, I am confident by doing anything with any genome, as long as its
+primary purpose is not self destruction. I am perfectly happy with plant,
+animal, human genome modifications, if it makes lives for everyone easier. This
+includes crop and animal improvements, human genome modifications for resistance
+to diseases and etc.
+
+On the other hand, I would not want my offspring to be pre-defined before
+his/her birth. Unpredictable life and less safe, in a sense, is way more
+interesting.
+
+\begin{thebibliography}{9}
+
+    \bibitem{shotgun}
+        J. Craig Venter, Mark D. Adams, Granger G. Sutton, Anthony R. Kerlavage,
+        Hamilton O. Smith, Michael Hunkapiller. \emph{Science}, 5 June 1998:
+        Vol.  280 no. 5369 pp. 1540-1542.
+
+    \bibitem{sanger}
+        Sanger F, Nicklen S, Coulson AR. DNA sequencing with chain-terminating
+        inhibitors. \emph{Proc Natl Acad Sci USA}. 1977 Dec; 74(12):5463-7.
+
+    \bibitem{ng-comparison}
+        Lin Liu, Yinhu Li, Siliang Li, Ni Hu, Yimin He, Ray Pong, Danni Lin,
+        Lihua Lu, and Maggie Law.  Comparison of Next-Generation Sequencing
+        Systems \emph{J Biomed Biotechnol}. 2012; 2012: 251364.
+
+    \bibitem{ng-comparison2}
+        Quail, Michael; Smith, Miriam E; Coupland, Paul; Otto, Thomas D; Harris,
+        Simon R; Connor, Thomas R; Bertoni, Anna; Swerdlow, Harold P; Gu, Yong.
+        "A tale of three next generation sequencing platforms: comparison of Ion
+        torrent, pacific biosciences and illumina MiSeq sequencers". \emph{BMC
+        Genomics} 13 (1): 341.
+
+    \bibitem{biotech}
+        Thieman, W.J.; Palladino, M.A. (2008). \emph{Introduction to
+        Biotechnology}. Pearson/Benjamin Cummings. 
+
+    \bibitem{pharmacogenomics}
+        Ermak G., Modern Science and Future Medicine (second edition), 164 p.,
+        2013
+
+    \bibitem{drought}
+        Sara Abdulla (27 May 1999). "Drought stress". \emph{Nature News.}
+        doi:10.1038/news990527-9.
+
+    \bibitem{oil-degradation}
+        "Genomic Insights into Oil Biodegradation in Marine Systems".
+        \emph{Microbial Biodegradation: Genomics and Molecular Biology.} Caister
+        Academic Press.
+
+    \bibitem{food}
+        L. Frewera, J. Lassenb, B. Kettlitzc, J. Scholdererd, V. Beekmane, K.G.
+        Berdalf Societal aspects of genetically modified foods. \emph{Food and
+        Chemical Toxicology}, Volume 42, Issue 7, July 2004, p. 1181–1193.
+
+\end{thebibliography}
+
+\end{document}
