@@ -99,6 +99,16 @@ iterate() {
     }
 }
 
+void preset() {
+    int i,j,k;
+    memset(neighbor, 0, sizeof(neighbor));
+
+    for (i = 0; i < MAX_NODES; i++)
+        for (j = 0; j < MAX_NODES; j++)
+            for (k = 0; k < MAX_NODES; k++)
+                routing_table[i][j][k] = MAX_DISTANCE;
+}
+
 int
 main(int argc, char **argv) {
     if (argc != 2) {
@@ -106,8 +116,7 @@ main(int argc, char **argv) {
         exit(1);
     }
     q = msg_q_create();
-    memset(routing_table, MAX_DISTANCE, sizeof(routing_table));
-    memset(neighbor, 0, sizeof(neighbor));
+    preset();
     read_data(argv[1]);
     iterate();
 
