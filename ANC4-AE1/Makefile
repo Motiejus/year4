@@ -5,7 +5,7 @@ CFLAGS=-Wall -Wextra -pedantic -g
 
 all: main
 
-main: main.o msg_queue.o diagnostics.o
+main: main.o msg_queue.o diagnostics.o getdelim.o
 
 diagnostics.o main.o: diagnostics.h
 

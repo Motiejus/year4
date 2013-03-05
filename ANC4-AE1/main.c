@@ -10,6 +10,8 @@
 #include "msg_queue.h"
 
 
+ssize_t getline_g (char **lineptr, size_t *n, FILE *stream);
+
 /* Number of nodes */
 int N;
 table_t routing_table[MAX_NODES];
@@ -30,10 +32,10 @@ read_data(const char *filename) {
 
     /* Ignore the first line (set defn). We make an assumption that
        all node names are integers and they are strictly increasing by 1 */
-    if ((n = getline(&buf, &n, f)) <= 0) { perror("getline"); exit(1); }
+    if ((n = getline_g(&buf, &n, f)) <= 0) { perror("getline_g"); exit(1); }
 
-    if (getline(&buf, &n, f) <= 0) { perror("getline"); exit(1); }
-    for (eof = 1; eof > 0; eof = getline(&buf, &n, f)) {
+    if (getline_g(&buf, &n, f) <= 0) { perror("getline_g"); exit(1); }
+    for (eof = 1; eof > 0; eof = getline_g(&buf, &n, f)) {
         assert(sscanf(buf, "(%d,%d,%d)", &node_from, &node_to, &cost) == 3);
         N = N < node_from? node_from : N;
         N = N < node_to? node_to : N;
