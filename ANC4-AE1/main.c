@@ -16,7 +16,7 @@ ssize_t getline_g (char **lineptr, size_t *n, FILE *stream);
 int N;
 table_t routing_table[MAX_NODES];
 msg_q *q;
-int tick = 0;
+int tick;
 
 int neighbor[MAX_NODES][MAX_NODES];
 
@@ -120,6 +120,8 @@ main(int argc, char **argv) {
     q = msg_q_create();
     preset();
     read_data(argv[1]);
+    diagnostics(q, 0, N, routing_table);
+    tick = 1;
     iterate();
     msg_q_destroy(q);
 
