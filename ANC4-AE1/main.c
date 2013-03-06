@@ -57,7 +57,6 @@ broadcast(int self) {
     int to;
     for (to = 0; to < N; to++) {
         if (neighbor[self][to])
-
             new_msg(q, tick, self, to, routing_table[self]);
     }
 }
@@ -66,7 +65,9 @@ void
 receive(int self, int msg_from, table_t msg_tab) {
     int to, via;
     for (to = 0; to < N; to++) {
+        if (to == self) continue;
         for (via = 0; via < N; via++) {
+            if (via == self) continue;
             cost_t cost = msg_tab[self][self];
             if (routing_table[self][msg_from][to] > msg_tab[via][to] + cost) {
                 routing_table[self][msg_from][to] = msg_tab[via][to] + cost;
