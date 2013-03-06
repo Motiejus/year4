@@ -57,7 +57,8 @@ broadcast(int self) {
     int to;
     for (to = 0; to < N; to++) {
         if (neighbor[self][to])
-            new_msg(q, tick, self, to, &routing_table[self]);
+
+            new_msg(q, tick, self, to, routing_table[self]);
     }
 }
 
@@ -92,7 +93,7 @@ iterate() {
         got_smth = 0;
         while ((msg = pop_msg(q, tick)) != NULL) {
             got_smth = 1;
-            receive(msg->to, msg->from, *msg->table);
+            receive(msg->to, msg->from, msg->table);
             destroy_msg(msg);
         }
         diagnostics(q, tick, N, routing_table);
@@ -119,6 +120,7 @@ main(int argc, char **argv) {
     preset();
     read_data(argv[1]);
     iterate();
+    msg_q_destroy(q);
 
     return 0;
 }

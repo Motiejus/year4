@@ -7,7 +7,7 @@ typedef struct msg_struct {
     int tick,
         from,
         to;
-    table_t *table;
+    table_t table;
     struct msg_struct *next;
 } msg_t;
 
@@ -24,7 +24,7 @@ msg_q* msg_q_create();
 void msg_q_destroy(msg_q *q);
 
 /* Add message to node inbox */
-void new_msg(msg_q *q, int tick, int from, int to, table_t *table);
+void new_msg(msg_q *q, int tick, int from, int to, table_t table);
 
 /* Pop the next message for this tick.
  *
