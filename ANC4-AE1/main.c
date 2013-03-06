@@ -69,8 +69,8 @@ receive(int self, int msg_from, table_t msg_tab) {
         for (via = 0; via < N; via++) {
             if (via == self) continue;
             cost_t cost = msg_tab[self][self];
-            if (routing_table[self][msg_from][to] > msg_tab[via][to] + cost) {
-                routing_table[self][msg_from][to] = msg_tab[via][to] + cost;
+            if (routing_table[self][to][msg_from] > msg_tab[to][via] + cost) {
+                routing_table[self][to][msg_from] = msg_tab[to][via] + cost;
                 broadcast(self);
             }
         }
