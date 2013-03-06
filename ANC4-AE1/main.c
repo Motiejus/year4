@@ -10,10 +10,12 @@
 #include "msg_queue.h"
 
 
+/* GNU getline (needed for mingw) */
 ssize_t getline_g (char **lineptr, size_t *n, FILE *stream);
 
 /* Number of nodes */
 int N;
+
 table_t routing_table[MAX_NODES];
 msg_q *q;
 int tick;
@@ -57,24 +59,32 @@ broadcast(int self) {
     int to;
     for (to = 0; to < N; to++) {
         if (neighbor[self][to])
-            new_msg(q, tick, self, to, routing_table[self]);
+            new_msg(q, tick+1, self, to, routing_table[self]);
     }
 }
 
 void
 receive(int self, int msg_from, table_t msg_tab) {
-    int to, via;
+    int to, via, tbl_changed = 0;
+
+    /* Cost from sender to self */
+    cost_t cost = msg_tab[self][self];
+
     for (to = 0; to < N; to++) {
         if (to == self) continue;
-        for (via = 0; via < N; via++) {
-            if (via == self) continue;
-            cost_t cost = msg_tab[self][self];
-            if (routing_table[self][to][msg_from] > msg_tab[to][via] + cost) {
-                routing_table[self][to][msg_from] = msg_tab[to][via] + cost;
-                broadcast(self);
-            }
+
+        cost_t shortest_to_to = msg_tab[to][0];
+        for (via = 1; via < N; via++)
+            shortest_to_to = msg_tab[to][via] < shortest_to_to?
+                msg_tab[to][via] : shortest_to_to;
+
+        if (routing_table[self][to][msg_from] > shortest_to_to + cost) {
+            routing_table[self][to][msg_from] = shortest_to_to + cost;
+            tbl_changed = 1;
         }
     }
+    if (tbl_changed)
+        broadcast(self);
 }
 
 
@@ -84,20 +94,21 @@ receive(int self, int msg_from, table_t msg_tab) {
 void
 iterate() {
     /* On tick 0 do a broadcast */
-    int got_smth = 1, i;
+    int i, got_smth = 1;
     msg_t *msg;
 
     for (i = 0; i < N; i++)
         broadcast(i);
 
-    for (; got_smth == 1; tick++) {
+    while (got_smth == 1) {
+        diagnostics(q, tick, N, routing_table);
+        tick++;
         got_smth = 0;
         while ((msg = pop_msg(q, tick)) != NULL) {
             got_smth = 1;
             receive(msg->to, msg->from, msg->table);
             destroy_msg(msg);
         }
-        diagnostics(q, tick, N, routing_table);
     }
 }
 
@@ -120,8 +131,7 @@ main(int argc, char **argv) {
     q = msg_q_create();
     preset();
     read_data(argv[1]);
-    diagnostics(q, 0, N, routing_table);
-    tick = 1;
+    tick = 0;
     iterate();
     msg_q_destroy(q);
 
