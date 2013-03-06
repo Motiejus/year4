@@ -11,5 +11,6 @@ typedef int cost_t;
  * 3. via
  */
 typedef cost_t table_t[MAX_NODES][MAX_NODES];
+typedef cost_t shortest_t[MAX_NODES];
 
 #endif /* __ANC4_TYPES_H */

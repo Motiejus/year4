@@ -22,8 +22,8 @@ msg_q_destroy(msg_q *q) {
 }
 
 void
-new_msg(msg_q *q, int tick, int from, int to, table_t table) {
-    int i, j;
+new_msg(msg_q *q, int tick, int from, int to, shortest_t table) {
+    int i;
     msg_t *msg;
     if ((msg = malloc(sizeof(msg_t))) == NULL) {
         perror("malloc");
@@ -34,8 +34,7 @@ new_msg(msg_q *q, int tick, int from, int to, table_t table) {
     msg->to = to;
 
     for (i = 0; i < MAX_NODES; i++)
-        for (j = 0; j < MAX_NODES; j++)
-            msg->table[i][j] = table[i][j];
+        msg->table[i] = table[i];
 
     msg->next = NULL;
     if (q->head != NULL) {

@@ -1,4 +1,3 @@
-#define _GNU_SOURCE
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -10,17 +9,20 @@
 #include "msg_queue.h"
 
 
-/* GNU getline (needed for mingw) */
+/* GNU getline (necessary for mingw) */
 ssize_t getline_g (char **lineptr, size_t *n, FILE *stream);
 
 /* Number of nodes */
 int N;
 
+
 table_t routing_table[MAX_NODES];
+/* Shortest path from -> to */
+cost_t shortest[MAX_NODES][MAX_NODES];
 msg_q *q;
 int tick;
 
-int neighbor[MAX_NODES][MAX_NODES];
+int neighbour[MAX_NODES][MAX_NODES];
 
 void
 read_data(const char *filename) {
@@ -43,7 +45,10 @@ read_data(const char *filename) {
         N = N < node_to? node_to : N;
         routing_table[node_from][node_to][node_to] = cost;
         routing_table[node_to][node_from][node_from] = cost;
-        neighbor[node_to][node_from] = neighbor[node_from][node_to] = 1;
+        shortest[node_from][node_to] = cost;
+        shortest[node_to][node_from] = cost;
+
+        neighbour[node_to][node_from] = neighbour[node_from][node_to] = 1;
         /* printf("From: %d, To: %d, Cost: %d\n", node_from, node_to, cost); */
     }
     /* # of nodes = highest numbered node + 1 */
@@ -53,37 +58,36 @@ read_data(const char *filename) {
     fclose(f);
 }
 
-/* Send self routing table to all neighbours */
+/* Send shortest paths of self to all neighbours */
 void
 broadcast(int self) {
     int to;
     for (to = 0; to < N; to++) {
-        if (neighbor[self][to])
-            new_msg(q, tick+1, self, to, routing_table[self]);
+        if (neighbour[self][to])
+            new_msg(q, tick+1, self, to, shortest[self]);
     }
 }
 
 void
-receive(int self, int msg_from, table_t msg_tab) {
-    int to, via, tbl_changed = 0;
+receive(int self, int msg_from, shortest_t msg_tab) {
+    int to, shortest_changed = 0;
 
     /* Cost from sender to self */
-    cost_t cost = msg_tab[self][self];
+    cost_t cost = routing_table[self][msg_from][msg_from];
 
     for (to = 0; to < N; to++) {
         if (to == self) continue;
 
-        cost_t shortest_to_to = msg_tab[to][0];
-        for (via = 1; via < N; via++)
-            shortest_to_to = msg_tab[to][via] < shortest_to_to?
-                msg_tab[to][via] : shortest_to_to;
-
+        cost_t shortest_to_to = msg_tab[to];
         if (routing_table[self][to][msg_from] > shortest_to_to + cost) {
             routing_table[self][to][msg_from] = shortest_to_to + cost;
-            tbl_changed = 1;
+            if (shortest_to_to + cost < shortest[self][to]) {
+                shortest[self][to] = shortest_to_to + cost;
+                shortest_changed = 1;
+            }
         }
     }
-    if (tbl_changed)
+    if (shortest_changed)
         broadcast(self);
 }
 
@@ -114,12 +118,14 @@ iterate() {
 
 void preset() {
     int i,j,k;
-    memset(neighbor, 0, sizeof(neighbor));
+    memset(neighbour, 0, sizeof(neighbour));
 
     for (i = 0; i < MAX_NODES; i++)
-        for (j = 0; j < MAX_NODES; j++)
+        for (j = 0; j < MAX_NODES; j++) {
+            shortest[i][j] = MAX_DISTANCE;
             for (k = 0; k < MAX_NODES; k++)
                 routing_table[i][j][k] = MAX_DISTANCE;
+        }
 }
 
 int
