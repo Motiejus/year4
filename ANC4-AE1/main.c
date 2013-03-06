@@ -13,16 +13,16 @@
 ssize_t getline_g (char **lineptr, size_t *n, FILE *stream);
 
 /* Number of nodes */
-int N;
-
+int N,
+    tick,
+    neighbour[MAX_NODES][MAX_NODES];
 
 table_t routing_table[MAX_NODES];
+
 /* Shortest path from -> to */
 cost_t shortest[MAX_NODES][MAX_NODES];
 msg_q *q;
-int tick;
 
-int neighbour[MAX_NODES][MAX_NODES];
 
 void
 read_data(const char *filename) {
@@ -76,16 +76,22 @@ receive(int self, int msg_from, shortest_t msg_tab) {
     cost_t cost = routing_table[self][msg_from][msg_from];
 
     for (to = 0; to < N; to++) {
-        if (to == self) continue;
+        int via;
+        cost_t shortest_to_to = msg_tab[to],
+               old_shortest_self_to = shortest[self][to];
 
-        cost_t shortest_to_to = msg_tab[to];
-        if (routing_table[self][to][msg_from] > shortest_to_to + cost) {
-            routing_table[self][to][msg_from] = shortest_to_to + cost;
-            if (shortest_to_to + cost < shortest[self][to]) {
-                shortest[self][to] = shortest_to_to + cost;
-                shortest_changed = 1;
-            }
-        }
+        if (to == self || to == msg_from) continue;
+
+        routing_table[self][to][msg_from] = shortest_to_to + cost;
+
+        /* Recalculate shortest route to "to" */
+        shortest[self][to] = routing_table[self][to][0];
+        for (via = 1; via < N; via++)
+            if (routing_table[self][to][via] < shortest[self][to])
+                shortest[self][to] = routing_table[self][to][via];
+
+        if (shortest[self][to] != old_shortest_self_to)
+            shortest_changed = 1;
     }
     if (shortest_changed)
         broadcast(self);
