@@ -103,6 +103,42 @@ receive(int self, int msg_from, shortest_t msg_tab) {
         broadcast(self);
 }
 
+/* Update shortest routes of 'self' that go through b */
+void
+update_shortest(int self, int b) {
+    int to, via, shortest_changed = 0;
+
+    for (to = 0; to < N; to++) {
+        if (to == self) continue;
+        if (shortest[self][to].via == b) {
+            shortest[self][to].cost = MAX_DISTANCE;
+            shortest_changed = 1;
+            /* Find other shortest path which does not go through b */
+            for (via = 0; via < N; via++)
+                if (routing_table[self][to][via] < shortest[self][to].cost) {
+                    shortest[self][to].cost = routing_table[self][to][via];
+                    shortest[self][to].via = via;
+                }
+        }
+    }
+
+    if (shortest_changed)
+        broadcast(self);
+}
+
+/*
+ * Modify route between 2 neighbours (must be neighbors!)
+ */
+void
+modify_route(int a, int b, cost_t new_cost) {
+
+    routing_table[a][b][b] = new_cost;
+    routing_table[b][a][a] = new_cost;
+
+    /* Recalculate a and b shortest paths that go via each other */
+    update_shortest(a, b);
+    update_shortest(b, a);
+}
 
 /*
  * Iterate through all nodes' "inboxes" and do the job
