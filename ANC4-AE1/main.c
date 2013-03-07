@@ -14,13 +14,13 @@ ssize_t getline_g (char **lineptr, size_t *n, FILE *stream);
 
 /* Number of nodes */
 int N,
-    tick,
+    tick = 0,
     neighbour[MAX_NODES][MAX_NODES];
 
 table_t routing_table[MAX_NODES];
 
 /* Shortest path from -> to */
-cost_t shortest[MAX_NODES][MAX_NODES];
+shortest_t shortest[MAX_NODES];
 msg_q *q;
 
 
@@ -45,8 +45,10 @@ read_data(const char *filename) {
         N = N < node_to? node_to : N;
         routing_table[node_from][node_to][node_to] = cost;
         routing_table[node_to][node_from][node_from] = cost;
-        shortest[node_from][node_to] = cost;
-        shortest[node_to][node_from] = cost;
+        shortest[node_from][node_to].cost = cost;
+        shortest[node_to][node_from].cost = cost;
+        shortest[node_from][node_to].via = node_to;
+        shortest[node_to][node_from].via = node_from;
 
         neighbour[node_to][node_from] = neighbour[node_from][node_to] = 1;
         /* printf("From: %d, To: %d, Cost: %d\n", node_from, node_to, cost); */
@@ -77,20 +79,20 @@ receive(int self, int msg_from, shortest_t msg_tab) {
 
     for (to = 0; to < N; to++) {
         int via;
-        cost_t shortest_to_to = msg_tab[to],
-               old_shortest_self_to = shortest[self][to];
+        cost_t shortest_to_to = msg_tab[to].cost,
+               old_shortest_self_to = shortest[self][to].cost;
 
         if (to == self || to == msg_from) continue;
 
         routing_table[self][to][msg_from] = shortest_to_to + cost;
 
         /* Recalculate shortest route to "to" */
-        shortest[self][to] = routing_table[self][to][0];
+        shortest[self][to].cost = routing_table[self][to][0];
         for (via = 1; via < N; via++)
-            if (routing_table[self][to][via] < shortest[self][to])
-                shortest[self][to] = routing_table[self][to][via];
+            if (routing_table[self][to][via] < shortest[self][to].cost)
+                shortest[self][to].cost = routing_table[self][to][via];
 
-        if (shortest[self][to] != old_shortest_self_to)
+        if (shortest[self][to].cost != old_shortest_self_to)
             shortest_changed = 1;
     }
     if (shortest_changed)
@@ -128,7 +130,7 @@ void preset() {
 
     for (i = 0; i < MAX_NODES; i++)
         for (j = 0; j < MAX_NODES; j++) {
-            shortest[i][j] = MAX_DISTANCE;
+            shortest[i][j].cost = MAX_DISTANCE;
             for (k = 0; k < MAX_NODES; k++)
                 routing_table[i][j][k] = MAX_DISTANCE;
         }
@@ -143,7 +145,6 @@ main(int argc, char **argv) {
     q = msg_q_create();
     preset();
     read_data(argv[1]);
-    tick = 0;
     iterate();
     msg_q_destroy(q);
 
