@@ -13,7 +13,7 @@
 /* Number of nodes */
 int N,
     tick = 0,
-    split_horizon = 1;
+    split_horizon = 0;
 
 table_t routing_table[MAX_NODES];
 
@@ -122,10 +122,10 @@ update_shortest(int self, int b) {
 }
 
 /*
- * Modify route between 2 neighbours (must be neighbors!)
+ * Modify route between 2 nodes
  */
 void
-modify_route(int a, int b, cost_t new_cost) {
+modify_link(int a, int b, cost_t new_cost) {
 
     routing_table[a][b][b] = new_cost;
     routing_table[b][a][a] = new_cost;
@@ -171,6 +171,8 @@ ui() {
 
     while (cont) {
         int from, to;
+        cost_t new_cost;
+
         printf("Enter your command (h for help):\n> ");
         fgets(buf, MAX_LINE, stdin);
         if (strrchr(buf, '\n') != NULL)
@@ -186,22 +188,30 @@ ui() {
                 printf("Route converged.\n");
         } else if (strstr(buf, "s") == buf) {
             cont = 0;
-        } else if (tick == 0 && strstr(buf, "o") == buf) {
+        } else if (tick == 0 && strstr(buf, "z") == buf) {
             split_horizon = !split_horizon;
             printf("Split horizon = %d\n", split_horizon);
         } else if (strstr(buf, "p") == buf) {
             routing_tables(tick, N, routing_table);
+        } else if (sscanf(buf, "m %d %d %d", &from, &to, &new_cost) == 3) {
+            modify_link(from, to, new_cost);
+            printf("Link modified\n");
+        } else if (sscanf(buf, "d %d %d", &from, &to) == 2) {
+            modify_link(from, to, MAX_DISTANCE);
+            printf("Link dropped\n");
         } else if (sscanf(buf, "b %d %d", &from, &to) == 2) {
             best_route(from, to, shortest);
         } else if (strstr(buf, "h") == buf) {
             printf("Commands\n");
             if (tick == 0)
-                printf("  o             - toggle split horizon\n");
-            printf("  n             - next iteration\n"
-                   "  p             - print routing table\n"
-                   "  b [from] [to] - print best route\n"
-                   "  s             - stop\n"
-                   "  h             - this help\n"
+                printf("  z                    - toggle split horizon\n");
+            printf("  m [from] [to] [cost] - modify link\n"
+                   "  d [from] [to]        - delete link\n"
+                   "  n                    - next iteration\n"
+                   "  b [from] [to]        - print best route\n"
+                   "  p                    - print routing table\n"
+                   "  s                    - stop\n"
+                   "  h                    - this help\n"
                   );
         } else {
             printf("Unknown command '%s'. Press 'h' for help.\n", buf);
