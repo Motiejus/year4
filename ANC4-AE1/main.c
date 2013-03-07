@@ -153,7 +153,7 @@ iterate() {
         broadcast(i);
 
     while (got_smth == 1) {
-        diagnostics(q, tick, N, routing_table);
+        routing_tables(tick, N, routing_table);
         tick++;
         got_smth = 0;
         while ((msg = pop_msg(q, tick)) != NULL) {
@@ -166,7 +166,6 @@ iterate() {
 
 void preset() {
     int i,j,k;
-
     for (i = 0; i < MAX_NODES; i++)
         for (j = 0; j < MAX_NODES; j++) {
             shortest[i][j].cost = MAX_DISTANCE;

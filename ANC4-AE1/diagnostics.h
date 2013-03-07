@@ -3,6 +3,7 @@
 
 #include "msg_queue.h"
 
-void diagnostics(msg_q *q, int tick, int N, table_t *routing_table);
+void routing_tables(int tick, int N, table_t *routing_table);
+void best_route(int from, int to, shortest_t shortest[MAX_NODES]);
 
 #endif

@@ -8,9 +8,8 @@
 #include "msg_queue.h"
 
 void
-diagnostics(msg_q *q, int tick, int N, table_t *routing_table) {
+routing_tables(int tick, int N, table_t *routing_table) {
     int self, via, to;
-    (void) q;
 
     printf("Tick %d completed. Routing tables (0 to %d):\n", tick, N);
 
@@ -44,6 +43,18 @@ diagnostics(msg_q *q, int tick, int N, table_t *routing_table) {
             printf("  |");
         }
         printf("\n");
+    }
+    printf("\n");
+}
+
+/* Print best route between two points. */
+void
+best_route(int from, int to, shortest_t shortest[MAX_NODES]) {
+    int i;
+    printf("Shortest route between %d -> %d is: %d\n", from, to, shortest[from][to].cost);
+    printf("Path: ");
+    for (i = from; i != to; i = shortest[i][to].via) {
+        printf("%d ", i);
     }
     printf("\n");
 }
