@@ -101,19 +101,18 @@ receive(int self, int msg_from, shortest_t msg_tab) {
 /* Update shortest routes of 'self' that go through b */
 void
 update_shortest(int self, int b) {
-    int to, via, shortest_changed = 0;
+    int to, shortest_changed = 0;
 
     for (to = 0; to < N; to++) {
         if (to == self) continue;
         if (shortest[self][to].via == b) {
-            shortest[self][to].cost = MAX_DISTANCE;
+            if (routing_table[self][to][to] < MAX_DISTANCE) {
+                shortest[self][to].cost = routing_table[self][to][to];
+                shortest[self][to].via = to;
+            } else {
+                shortest[self][to].cost = MAX_DISTANCE;
+            }
             shortest_changed = 1;
-            /* Find other shortest path which does not go through b */
-            for (via = 0; via < N; via++)
-                if (routing_table[self][to][via] < shortest[self][to].cost) {
-                    shortest[self][to].cost = routing_table[self][to][via];
-                    shortest[self][to].via = via;
-                }
         }
     }
 
@@ -126,6 +125,12 @@ update_shortest(int self, int b) {
  */
 void
 modify_link(int a, int b, cost_t new_cost) {
+    int to;
+
+    for (to = 0; to < N; to++) {
+        routing_table[a][to][b] = MAX_DISTANCE;
+        routing_table[b][to][a] = MAX_DISTANCE;
+    }
 
     routing_table[a][b][b] = new_cost;
     routing_table[b][a][a] = new_cost;
