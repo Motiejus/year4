@@ -11,7 +11,7 @@ void
 routing_tables(int tick, int N, table_t *routing_table) {
     int self, via, to;
 
-    printf("Tick %d completed. Routing tables (0 to %d):\n", tick, N);
+    printf("Routing tables (0 to %d) after tick %d:\n", N, tick);
 
     printf("Via  |");
     for (self = 0; self < N; self++) {
@@ -50,11 +50,16 @@ routing_tables(int tick, int N, table_t *routing_table) {
 /* Print best route between two points. */
 void
 best_route(int from, int to, shortest_t shortest[MAX_NODES]) {
-    int i;
-    printf("Shortest route between %d -> %d is: %d\n", from, to, shortest[from][to].cost);
-    printf("Path: ");
-    for (i = from; i != to; i = shortest[i][to].via) {
-        printf("%d ", i);
+    if (shortest[from][to].cost < MAX_DISTANCE) {
+        int i;
+        printf("Shortest route between %d and %d is: %d. ", from, to, shortest[from][to].cost);
+        printf("Path: ");
+        for (i = from; i != to; i = shortest[i][to].via) {
+            printf("%d -> ", i);
+        }
+        printf("%d\n", i);
     }
-    printf("\n");
+    else {
+        printf("There is no route between %d and %d.\n", from, to);
+    }
 }

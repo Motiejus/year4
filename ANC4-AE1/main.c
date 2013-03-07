@@ -8,9 +8,7 @@
 #include "diagnostics.h"
 #include "msg_queue.h"
 
-
-/* GNU getline (necessary for mingw) */
-ssize_t getline_g (char **lineptr, size_t *n, FILE *stream);
+#define MAX_LINE 255
 
 /* Number of nodes */
 int N,
@@ -27,19 +25,17 @@ msg_q *q;
 void
 read_data(const char *filename) {
     FILE *f;
-    size_t n;
-    int node_from, node_to, eof;
+    int node_from, node_to;
     cost_t cost;
-    char *buf = NULL;
+    char buf[MAX_LINE];
 
     if ((f = fopen(filename, "r")) == NULL) { perror("fopen"); exit(1); }
 
     /* Ignore the first line (set defn). We make an assumption that
        all node names are integers and they are strictly increasing by 1 */
-    if ((n = getline_g(&buf, &n, f)) <= 0) { perror("getline_g"); exit(1); }
+    if (fgets(buf, MAX_LINE, f) == NULL) { perror("fgets"); exit(1); }
 
-    if (getline_g(&buf, &n, f) <= 0) { perror("getline_g"); exit(1); }
-    for (eof = 1; eof > 0; eof = getline_g(&buf, &n, f)) {
+    while (fgets(buf, MAX_LINE, f) != NULL) {
         assert(sscanf(buf, "(%d,%d,%d)", &node_from, &node_to, &cost) == 3);
         N = N < node_from? node_from : N;
         N = N < node_to? node_to : N;
@@ -55,7 +51,6 @@ read_data(const char *filename) {
     /* # of nodes = highest numbered node + 1 */
     N += 1;
 
-    free(buf);
     fclose(f);
 }
 
@@ -141,27 +136,22 @@ modify_route(int a, int b, cost_t new_cost) {
 }
 
 /*
- * Iterate through all nodes' "inboxes" and do the job
+ * Iterate through all nodes' "inboxes" and do the job. Tick by tick.
+ * Return 1 if there is more work, 0 otherwise.
  */
-void
+int
 iterate() {
     /* On tick 0 do a broadcast */
-    int i, got_smth = 1;
+    int got_smth = 0;
     msg_t *msg;
 
-    for (i = 0; i < N; i++)
-        broadcast(i);
-
-    while (got_smth == 1) {
-        routing_tables(tick, N, routing_table);
-        tick++;
-        got_smth = 0;
-        while ((msg = pop_msg(q, tick)) != NULL) {
-            got_smth = 1;
-            receive(msg->to, msg->from, msg->table);
-            destroy_msg(msg);
-        }
+    tick++;
+    while ((msg = pop_msg(q, tick)) != NULL) {
+        got_smth = 1;
+        receive(msg->to, msg->from, msg->table);
+        destroy_msg(msg);
     }
+    return got_smth;
 }
 
 void preset() {
@@ -174,8 +164,54 @@ void preset() {
         }
 }
 
+void
+ui() {
+    int cont = 1;
+    char buf[MAX_LINE];
+
+    while (cont) {
+        int from, to;
+        printf("Enter your command (h for help):\n> ");
+        fgets(buf, MAX_LINE, stdin);
+        if (strrchr(buf, '\n') != NULL)
+            *strrchr(buf, '\n') = '\0';
+
+        if (strstr(buf, "n") == buf) { /* next */
+            iterate();
+            printf("Tick %d iteration complete. Split horizon = %d. ",
+                    tick, split_horizon);
+            if (peek_msg(q, tick+1) != NULL)
+                printf("Not converged.\n");
+            else
+                printf("Route converged.\n");
+        } else if (strstr(buf, "s") == buf) {
+            cont = 0;
+        } else if (tick == 0 && strstr(buf, "o") == buf) {
+            split_horizon = !split_horizon;
+            printf("Split horizon = %d\n", split_horizon);
+        } else if (strstr(buf, "p") == buf) {
+            routing_tables(tick, N, routing_table);
+        } else if (sscanf(buf, "b %d %d", &from, &to) == 2) {
+            best_route(from, to, shortest);
+        } else if (strstr(buf, "h") == buf) {
+            printf("Commands\n");
+            if (tick == 0)
+                printf("  o             - toggle split horizon\n");
+            printf("  n             - next iteration\n"
+                   "  p             - print routing table\n"
+                   "  b [from] [to] - print best route\n"
+                   "  s             - stop\n"
+                   "  h             - this help\n"
+                  );
+        } else {
+            printf("Unknown command '%s'. Press 'h' for help.\n", buf);
+        }
+    }
+}
+
 int
 main(int argc, char **argv) {
+    int i;
     if (argc != 2) {
         fprintf(stderr, "Usage: %s SAMPLE_FILE\n", argv[0]);
         exit(1);
@@ -183,8 +219,14 @@ main(int argc, char **argv) {
     q = msg_q_create();
     preset();
     read_data(argv[1]);
-    iterate();
+
+    for (i = 0; i < N; i++)
+        broadcast(i);
+
+
+    ui();
     msg_q_destroy(q);
+
 
     return 0;
 }

@@ -45,12 +45,21 @@ new_msg(msg_q *q, int tick, int from, int to, shortest_t table) {
         q->tail = msg;
 }
 
+/* Is there anything in message queue? */
 msg_t*
-pop_msg(msg_q *q, int tick) {
+peek_msg(msg_q *q, int tick) {
     msg_t *msg = q->tail;
     if (msg == NULL)
         return NULL;
     if (msg->tick != tick)
+        return NULL;
+    return msg;
+}
+ 
+msg_t*
+pop_msg(msg_q *q, int tick) {
+    msg_t *msg = peek_msg(q, tick);
+    if (msg == NULL)
         return NULL;
     q->tail = msg->next;
     return msg;

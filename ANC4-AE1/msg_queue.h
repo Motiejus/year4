@@ -26,6 +26,8 @@ void msg_q_destroy(msg_q *q);
 /* Add message to node inbox */
 void new_msg(msg_q *q, int tick, int from, int to, shortest_t table);
 
+msg_t* peek_msg(msg_q *q, int tick);
+
 /* Pop the next message for this tick.
  *
  * Returned pointer must be destroyed by destroy_msg(). */

@@ -1,7 +1,7 @@
 CC=clang
 CFLAGS=-Wall -Wextra -pedantic -g
 
-OBJS=main.o msg_queue.o diagnostics.o getdelim.o
+OBJS=main.o msg_queue.o diagnostics.o
 
 .PHONY: all clean
 
