@@ -3,7 +3,7 @@
 #include <string.h>
 
 #include "types.h"
-#include "msg_queue.h"
+#include "msgqueue.h"
 
 msg_q*
 msg_q_create() {

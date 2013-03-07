@@ -1,7 +1,6 @@
-CC=clang
 CFLAGS=-Wall -Wextra -pedantic -g
 
-OBJS=main.o msg_queue.o diagnostics.o
+OBJS=main.o msgqueue.o diagnostics.o
 
 .PHONY: all clean
 
@@ -11,7 +10,7 @@ main: $(OBJS)
 
 diagnostics.o main.o: diagnostics.h
 
-diagnostics.o main.o msg_queue.o: types.h msg_queue.h
+diagnostics.o main.o msgqueue.o: types.h msgqueue.h
 
 clean:
 	rm -f main $(OBJS)

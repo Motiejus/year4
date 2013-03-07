@@ -5,7 +5,7 @@
 
 #include "types.h"
 #include "diagnostics.h"
-#include "msg_queue.h"
+#include "msgqueue.h"
 
 void
 routing_tables(int tick, int N, table_t *routing_table) {
@@ -16,7 +16,7 @@ routing_tables(int tick, int N, table_t *routing_table) {
     printf("Via  |");
     for (self = 0; self < N; self++) {
         for (via = 0; via < N; via++) {
-            printf("%4d", via);
+            printf("%3d", via);
         }
         printf("  |");
     }
@@ -25,7 +25,7 @@ routing_tables(int tick, int N, table_t *routing_table) {
     printf("-----+");
     for (self = 0; self < N; self++) {
         for (via = 0; via < N; via++) {
-            printf("----");
+            printf("---");
         }
         printf("--+");
     }
@@ -36,9 +36,9 @@ routing_tables(int tick, int N, table_t *routing_table) {
         for (self = 0; self < N; self++) {
             for (via = 0; via < N; via++) {
                 if (routing_table[self][to][via] < MAX_DISTANCE)
-                    printf("%4d", routing_table[self][to][via]);
+                    printf("%3d", routing_table[self][to][via]);
                 else
-                    printf("   .");
+                    printf("  .");
             }
             printf("  |");
         }

@@ -6,7 +6,7 @@
 
 #include "types.h"
 #include "diagnostics.h"
-#include "msg_queue.h"
+#include "msgqueue.h"
 
 #define MAX_LINE 255
 
