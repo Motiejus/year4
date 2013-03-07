@@ -15,6 +15,7 @@ ssize_t getline_g (char **lineptr, size_t *n, FILE *stream);
 /* Number of nodes */
 int N,
     tick = 0,
+    split_horizon = 1,
     neighbour[MAX_NODES][MAX_NODES];
 
 table_t routing_table[MAX_NODES];
@@ -82,6 +83,9 @@ receive(int self, int msg_from, shortest_t msg_tab) {
         cost_t old_shortest_self_to = shortest[self][to].cost;
 
         if (to == self || to == msg_from) continue;
+
+        if (split_horizon && msg_tab[to].via == self)
+            continue;
 
         routing_table[self][to][msg_from] = msg_tab[to].cost + cost;
 
