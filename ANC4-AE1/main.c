@@ -186,9 +186,10 @@ ui() {
                 printf("Not converged.\n");
             else
                 printf("Route converged.\n");
-        } else if (strstr(buf, "s") == buf) {
+        } else if (strstr(buf, "q") == buf || strstr(buf, "x") == buf) {
             cont = 0;
-        } else if (tick == 0 && strstr(buf, "z") == buf) {
+        } else if (tick == 0 &&
+                (strstr(buf, "s") == buf || strstr(buf, "z") == buf)) {
             split_horizon = !split_horizon;
             printf("Split horizon = %d\n", split_horizon);
         } else if (strstr(buf, "p") == buf) {
@@ -204,13 +205,13 @@ ui() {
         } else if (strstr(buf, "h") == buf) {
             printf("Commands\n");
             if (tick == 0)
-                printf("  z                    - toggle split horizon\n");
+                printf("  s | z                - toggle split horizon\n");
             printf("  m [from] [to] [cost] - modify link\n"
                    "  d [from] [to]        - delete link\n"
                    "  n                    - next iteration\n"
                    "  b [from] [to]        - print best route\n"
                    "  p                    - print routing table\n"
-                   "  s                    - stop\n"
+                   "  q | x                - quit\n"
                    "  h                    - this help\n"
                   );
         } else {

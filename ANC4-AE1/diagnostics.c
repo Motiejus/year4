@@ -11,7 +11,7 @@ void
 routing_tables(int tick, int N, table_t *routing_table) {
     int self, via, to;
 
-    printf("Routing tables (0 to %d) after tick %d:\n", N, tick);
+    printf("Routing tables (0 to %d) after tick %d:\n", N-1, tick);
 
     printf("Via  |");
     for (self = 0; self < N; self++) {
