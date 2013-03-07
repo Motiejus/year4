@@ -79,18 +79,20 @@ receive(int self, int msg_from, shortest_t msg_tab) {
 
     for (to = 0; to < N; to++) {
         int via;
-        cost_t shortest_to_to = msg_tab[to].cost,
-               old_shortest_self_to = shortest[self][to].cost;
+        cost_t old_shortest_self_to = shortest[self][to].cost;
 
         if (to == self || to == msg_from) continue;
 
-        routing_table[self][to][msg_from] = shortest_to_to + cost;
+        routing_table[self][to][msg_from] = msg_tab[to].cost + cost;
 
         /* Recalculate shortest route to "to" */
         shortest[self][to].cost = routing_table[self][to][0];
+        shortest[self][to].via = 0;
         for (via = 1; via < N; via++)
-            if (routing_table[self][to][via] < shortest[self][to].cost)
+            if (routing_table[self][to][via] < shortest[self][to].cost) {
                 shortest[self][to].cost = routing_table[self][to][via];
+                shortest[self][to].via = via;
+            }
 
         if (shortest[self][to].cost != old_shortest_self_to)
             shortest_changed = 1;
