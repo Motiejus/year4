@@ -64,6 +64,7 @@ broadcast(int self) {
     }
 }
 
+/* Receive message from neighbour about route reconfiguration */
 void
 receive(int self, int msg_from, shortest_t msg_tab) {
     int to, shortest_changed = 0;
@@ -159,6 +160,7 @@ iterate() {
     return got_smth;
 }
 
+/* Internal function to keep 'main' small. Presetting values */
 void preset() {
     int i,j,k;
     for (i = 0; i < MAX_NODES; i++)
@@ -169,6 +171,7 @@ void preset() {
         }
 }
 
+/* User interface, main loop */
 void
 ui() {
     int cont = 1;
@@ -239,10 +242,8 @@ main(int argc, char **argv) {
     for (i = 0; i < N; i++)
         broadcast(i);
 
-
     ui();
     msg_q_destroy(q);
-
 
     return 0;
 }
