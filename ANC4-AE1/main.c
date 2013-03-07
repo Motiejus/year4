@@ -15,8 +15,7 @@ ssize_t getline_g (char **lineptr, size_t *n, FILE *stream);
 /* Number of nodes */
 int N,
     tick = 0,
-    split_horizon = 1,
-    neighbour[MAX_NODES][MAX_NODES];
+    split_horizon = 1;
 
 table_t routing_table[MAX_NODES];
 
@@ -51,7 +50,6 @@ read_data(const char *filename) {
         shortest[node_from][node_to].via = node_to;
         shortest[node_to][node_from].via = node_from;
 
-        neighbour[node_to][node_from] = neighbour[node_from][node_to] = 1;
         /* printf("From: %d, To: %d, Cost: %d\n", node_from, node_to, cost); */
     }
     /* # of nodes = highest numbered node + 1 */
@@ -66,7 +64,7 @@ void
 broadcast(int self) {
     int to;
     for (to = 0; to < N; to++) {
-        if (neighbour[self][to])
+        if (routing_table[self][to][to] < MAX_DISTANCE)
             new_msg(q, tick+1, self, to, shortest[self]);
     }
 }
@@ -132,7 +130,6 @@ iterate() {
 
 void preset() {
     int i,j,k;
-    memset(neighbour, 0, sizeof(neighbour));
 
     for (i = 0; i < MAX_NODES; i++)
         for (j = 0; j < MAX_NODES; j++) {
