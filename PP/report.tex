@@ -35,9 +35,65 @@
 This document is the report of Year 4 Personal Project named "Implement and
 test the Fast Genuine Generalized Consensus algorithm for Networks-on-Chip".
 
-\section{Outline}
+\section{Rationale}
 
-What is FGGC?
+During the last decade Moore's law had changed the rules of machine
+performance. Clock speeds used to double every three years [reference needed].
+However, recently frequency limits have been reached due to minimum possible
+sizes of the chips. On the other hand, given clock speed limits, number of
+cores on a chip started increasing rapidly. 8-core CPUs are now very common in
+commodity desktop systems, and servers with 24 cores are more and more widely
+deployed [reference needed].
+
+Future many-core systems in many aspects will look like distributed
+many-computer systems nowadays. Computing units (cores) will be sending messages
+to one another instead of relying on shared memory; this is already done by
+current many-core systems manufacturer Tilera[reference]. Parallella is
+foreseeing systems with 16K cores with similar power requirements of 16 core
+nowadays systems [link or reference needed].
+
+Since cores will be much smaller and less reliable, future many-core systems
+need redundancy in order to be robust. Hence the reason for investigating
+consensus algorithms in many-core systems.
+
+\section{What we want to do}
+
+Plan is to implement and test Fast Genuine Generalised Consensus algorithm on
+Tilera64 many-core chip. Here is a brief outline of consensus algorithms, and
+justification for the programming language of implementation.
+
+\subsection{Consensus and Paxos family overview}
+
+Paxos family algorithms are designed for reliably reaching a consensus in a
+distributed system. The most primitive application is reliably learning a value
+by a majority of acceptors. It works as follows: a set of proposers propose a
+value, and the algorithm guarantees that only one value will be chosen by a
+majority of acceptors. In worse case no value will be chosen.
+
+The most popular application is distributed state machine implementation: a
+majority of cluster nodes can use this algorithm to agree on an order in which
+to execute a series of commands. For example, this is useful to synchronize
+database transactions across many database nodes which have local copies of
+data. State machine replication is built on the primitive of choosing a single
+value.
+
+There is one family of algorithms that achieve this, the Paxos family. Classical
+Paxos (the first version of Paxos) was first described by Leslie Lamport in
+1998, but gained attraction only at 2005. As we can see, it is quite recent
+topic. [reference to Classic Paxos]. From then many variations of the algorithm
+emerged.
+
+Paxonian algorithms are generally used in state machine replication [make up a
+reference]. One of possible optimizations is that some commands in the state
+machine can be executed in different orders. For example, for two commands that
+manipulate different unrelated accounts order is not important; having this in
+mind some optimizations in consensus algorithm can be implemented.
+
+Generalized Paxos has the property described above; Fast Paxos improves its
+performance by [insert here], and Fast Genuine Generalized Consensus improves
+Fast Paxos in case of conflicts.
+
+\subsection{Overview of Fast Genuine Generalized Consensus (FGGC)}
 
 FGGC belongs to the family of Paxos algorithms. Its characteristics are similar
 to Fast Paxos, but with better recovery options.
@@ -54,24 +110,8 @@ communication steps, which is higher than Fast Paxos. This paper presents FGGC,
 a novel consensus algorithm that reduces recovery delay when a collision occurs
 to one.
 
-\subsection{Motivation}
-
 \subsubsection{Changes in many-core platforms}
 
-During the last decade Moore's law had changed the rules of machine
-performance. Clock speeds used to double every three years [reference needed].
-However, recently frequency limits have been reached due to minimum possible
-sizes of the chips. On the other hand, given clock speed limits, number of
-cores on a chip started increasing rapidly. 8-core CPUs are now very common in
-commodity desktop systems, and servers with 24 cores are more and more widely
-deployed [reference needed].
-
-Downside of current approach (SMP or NUMA) is that memory is shared among the
-cores. Every core has its own memory cache, which must be consistent with
-caches of other cores. This requirement increases communication overhead
-between cores solely for cache coherency exponentially as number of cores
-increases. Therefore for many cores (hundreds or thousands) another memory
-management approach is needed.
 
 Tilera(r?) is a multi-core machine producer which takes novel approach in
 memory management. Main (DDR3) memory is shared amongst the cores, however,
@@ -90,16 +130,6 @@ having the requirement to have consistent CPU caches decreases performance
 penalty and allows the system to scale.
 
 \subsubsection{Synchronization}
-
-With huge number of small cores in the system (It is estimated that within 5
-years a chip with 65536 cores will be produced [reference needed]), error
-detection mechanisms becomes less sophisticated, and some computations might
-become faulty. These faults in computations must be somehow detected by
-software. This is a very good application for Paxos family consensus
-algorithms.
-
-[This statement looks a bit vague. I could try speaking about distributed
-transactions instead, but do they make sense in 64k core machine?]
 
 We decided to implement and evaluate the performance of \fggc on a 64-core
 machine.
