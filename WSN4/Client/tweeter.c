@@ -1,3 +1,11 @@
+/*
+ * if SCEN==1, POST_TWEET is a broadcast.
+ * elseif SCEN==2, POST_TWEET is a message to user's mote.
+ *
+ * GET_TWEETS is always from host to user's mote.
+ * Tweets themselves are retrieved from user's mote regardless of scenario.
+ */
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -5,13 +13,12 @@
 #include <sfsource.h>
 #include <message.h>
 
+#include "tweeter.h"
 #include "TinyBlogMsg_gen.h"
 #include "TinyBlogMsgConsts.h"
 
-#include "tweeter.h"
-
-void
-post_tweet(int fd, int src, int dst, char *text, size_t length) {
+int
+post_tweet(int fd, int src, int dst, const char *text, size_t length) {
     size_t i;
     void *blogmsg;
     tmsg_t *msg;
@@ -27,7 +34,12 @@ post_tweet(int fd, int src, int dst, char *text, size_t length) {
 
     TinyBlogMsg_seqno_set(msg, 0);
     TinyBlogMsg_sourceMoteID_set(msg, src);
+#if SCEN == 1
+    TinyBlogMsg_destMoteID_set(msg, 0);
+    (void) dst;
+#else
     TinyBlogMsg_destMoteID_set(msg, dst);
+#endif
     TinyBlogMsg_action_set(msg, POST_TWEET);
     TinyBlogMsg_hopCount_set(msg, 0);
     TinyBlogMsg_nchars_set(msg, length);
@@ -40,6 +52,7 @@ post_tweet(int fd, int src, int dst, char *text, size_t length) {
     }
     free_tmsg(msg);
     free(blogmsg);
+    return DATA_SIZE;
 }
 
 void
@@ -68,4 +81,17 @@ post_get_tweets(int fd, int host_moteid, int user_moteid) {
     }
     free_tmsg(msg);
     free(blogmsg);
+}
+
+char
+**get_tweets(int fd, int host_moteid, int user_moteid) {
+    printf("Getting tweets. fd: %d, host mote: %d, user mote: %d\n",
+            fd, host_moteid, user_moteid);
+    return NULL;
+}
+
+void
+post_follow(int fd, int host_moteid, int user_moteid, int follow_who) {
+    printf("Posting follow '%d'. fd: %d, host mote: %d, user mote: %d\n",
+            follow_who, fd, host_moteid, user_moteid);
 }

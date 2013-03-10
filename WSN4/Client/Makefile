@@ -1,11 +1,17 @@
 # libmote.a in serial forwarder SDK dir must be precompiled. See README.
 
+SCEN ?= 1
+
 TINYBLOGMSG_GEN = TinyBlogMsg_gen.h TinyBlogMsg_gen.c
 
 SFDIR ?= $(TOSROOT)/support/sdk/c/sf
 CFLAGS += -Wall -Wextra -g
 CFLAGS += -I$(SFDIR)
+CFLAGS += -DSCEN=$(SCEN)
 LIBMOTE_A ?= $(SFDIR)/libmote.a
+
+all: main
+.PHONY: all clean
 
 main: main.o tweeter.o TinyBlogMsg_gen.o $(LIBMOTE_A)
 
@@ -20,4 +26,3 @@ $(TINYBLOGMSG_GEN): TinyBlogMsg.h
 
 clean:
 	rm -f $(TINYBLOGMSG_GEN) *.o TinyBlogMsg.c main
-.PHONY: clean
