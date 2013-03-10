@@ -1,51 +1,50 @@
+/*
+ * if SCEN==1, POST_TWEET is a broadcast.
+ * elseif SCEN==2, POST_TWEET is a message to user's mote.
+ *
+ * GET_TWEETS is always from host to user's mote.
+ * Tweets themselves are retrieved from user's mote regardless of scenario.
+ */
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
-#include <message.h>
 #include <sfsource.h>
 
-#include "TinyBlogMsg_gen.h"
-#include "TinyBlogMsgConsts.h"
+#include "tweeter.h"
+
+#define MAX_LINE 255
+
+void check_moteid(char *name, int moteid);
+
+
+/*
+void
+get_tweets(int fd, int src) {
+
+}
 
 void
-post_tweet(int fd, int src, int dst, char *text, size_t length) {
-    size_t i;
-    void *blogmsg;
-    tmsg_t *msg;
+ui(int fd, int moteid) {
+    char buf[MAX_LINE];
+    int cont = 1;
 
-    if ((blogmsg = malloc(TINYBLOGMSG_SIZE)) == NULL) {
-        perror("malloc"); exit(1);
+    while(cont) {
+
+
     }
-    if ((msg = new_tmsg(blogmsg, TINYBLOGMSG_SIZE)) == NULL) {
-        fprintf(stderr, "new_tmsg failure\n"); exit(1);
-    }
-
-    length = length > DATA_SIZE ? DATA_SIZE : length;
-
-    TinyBlogMsg_seqno_set(msg, 0);
-    TinyBlogMsg_sourceMoteID_set(msg, src);
-    TinyBlogMsg_destMoteID_set(msg, dst);
-    TinyBlogMsg_action_set(msg, POST_TWEET);
-    TinyBlogMsg_hopCount_set(msg, 0);
-    TinyBlogMsg_nchars_set(msg, length);
-    for (i = 0; i < DATA_SIZE; i++)
-        TinyBlogMsg_data_set(msg, i, i < length ? text[i] : '\0');
-    TinyBlogMsg_mood_set(msg, 0);
-
-    if (write_sf_packet(fd, tmsg_data(msg), TINYBLOGMSG_SIZE) == -1) {
-        fprintf(stderr, "Packet write failed\n");
-    }
-    free_tmsg(msg);
-    free(blogmsg);
 }
+*/
 
 int
 main(int argc, char **argv) {
-    int moteid, /* owner's mote id */
+    int host_moteid, /* id of mote connected to this host */
+        user_moteid, /* user's mote id */
         fd; /* To serial forwarder */
-    if (argc != 4) {
-        fprintf(stderr, "Usage: %s host port MOTEID\n", argv[0]);
+    if (argc != 5) {
+        fprintf(stderr, "Usage: %s host port HOST_MOTEID USER_MOTEID\n",
+                argv[0]);
         exit(1);
     }
     fd = open_sf_source(argv[1], atoi(argv[2]));
@@ -54,13 +53,20 @@ main(int argc, char **argv) {
                 argv[1], argv[2]);
         exit(1);
     }
-    moteid = atoi(argv[3]);
-    if (moteid < 1 || moteid > 999) {
-        fprintf(stderr, "MOTEID must be between 1 and 999, given %d\n", moteid);
-        exit(1);
-    }
+    check_moteid("HOST", host_moteid = atoi(argv[3]));
+    check_moteid("USER", user_moteid = atoi(argv[4]));
 
-    post_tweet(fd, moteid, 1, "labas\04", 6);
+    //ui(fd, moteid);
+    post_tweet(fd, host_moteid, user_moteid, "labas\04", 6);
 
     return 0;
+}
+
+void
+check_moteid(char *name, int moteid) {
+    if (moteid < 1 || moteid > 999) {
+        fprintf(stderr, "%s_MOTEID must be between 1 and 999, given %d\n",
+                name, moteid);
+        exit(1);
+    }
 }

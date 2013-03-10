@@ -7,9 +7,11 @@ CFLAGS += -Wall -Wextra -g
 CFLAGS += -I$(SFDIR)
 LIBMOTE_A ?= $(SFDIR)/libmote.a
 
-main: main.o TinyBlogMsg_gen.o $(LIBMOTE_A)
+main: main.o tweeter.o TinyBlogMsg_gen.o $(LIBMOTE_A)
 
-main.o: TinyBlogMsg_gen.h
+main.o: main.c tweeter.h
+
+tweeter.o: tweeter.c tweeter.h TinyBlogMsg_gen.h TinyBlogMsgConsts.h
 
 TinyBlogMsg_gen.o: $(TINYBLOGMSG_GEN)
 
