@@ -1,0 +1,58 @@
+Little bit of background
+====
+
+Rationale for the work. We want to do this work, because it will be important
+for future many-core systems. These systems will need redundancy in order to be
+reliable/robust. <- Justification for investigating consensus algorithms.
+
+
+Need some papers that talk about how big many core systems are likely to
+become. Parallella has a whitepaper that explains how will you have 16K core
+chip with current 16 core power requirements after 10 years. In short, failure
+will become more common. <- look at trends and many core systems and failure
+
+
+What we want to do
+=====
+
+Originally, FGGC in Tilera. We evaluated Tilera and there are serious problems
+with it. Links to projects that work on that.
+
+We want to implement a particular way of consensus algorithm in Erlang. To
+follow the dissertation user needs to know 2 things:
+
+1. what are consensus and how they work
+2. understand and justify Erlang.
+
+In order to implement FGGC, we need to do all the groundwork. There are 2
+classical paxos algorithms: one is educational, other is poorly implemented
+(for instance, no API).
+
+Why Erlang
+======
+
+Languages why Erlang. Built-in parallelism in actor language. Strong user base
+and proven that it is usable for real-world problems. During recent years many
+books have been written in Erlang which shows that there is growing interest in
+the language. Also explain Erlang programming model (actor model). John
+O'Donnel wants to see Haskell in there:
+
+1. Impossible to deploy in Tilera
+2. No actor model in Haskell (Cloud Haskell)
+
+We know why Erlang, why Paxos.
+
+Chapter on design
+======
+
+API for Paxos consensus and user requirements in order to use the API.
+
+What it takes to get FGGC
+=======
+
+Important thing: make API to support FGGC from the start.
+
+Stages to get it:
+1. Classic paxos for single election
+2. State machine for classic paxos
+...
