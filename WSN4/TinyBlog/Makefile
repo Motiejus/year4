@@ -1,0 +1,3 @@
+COMPONENT=TinyBlogAppC
+
+include $(MAKERULES)
