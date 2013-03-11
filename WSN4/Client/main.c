@@ -17,7 +17,7 @@ void
 ui(int fd, int host_moteid, int user_moteid) {
     char buf[MAX_LINE];
     int cont = 1,
-        print_help,
+        print_help = 1,
         follow_who;
     size_t length;
 
