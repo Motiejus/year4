@@ -20,7 +20,9 @@ module TinyBlogC @safe()
         interface SplitControl as RadioControl;
         interface Receive;
         interface AMSend;
-        interface Timer<TMilli>;
+        interface Timer<TMilli> as Timer_send;
+        interface Timer<TMilli> as Timer_sense;
+        interface Read<uint16_t>;
         interface Leds;
     }
 }
@@ -28,6 +30,7 @@ implementation
 {
     message_t sendBuf;
     tinyblog_t blogmsg_out;
+    uint16_t mood;
 
     /* Circular tweeter stuff */
     circular_t tweets_circ[STORE_TWEETS];
@@ -62,7 +65,7 @@ implementation
 
     void get_tweets(nx_uint16_t station) {
         base_station = station;
-        call Timer.startOneShot(0);
+        call Timer_send.startOneShot(0);
     }
 
     bool is_follower(nx_uint8_t id) {
@@ -91,6 +94,8 @@ implementation
         initialize_structures();
         if (call RadioControl.start() != SUCCESS)
             report_problem();
+
+        call Timer_sense.startPeriodic(5000);
     }
 
     event void RadioControl.startDone(error_t error) { }
@@ -136,13 +141,17 @@ implementation
         }
     }
 
+    event void Timer_sense.fired() {
+        call Read.read();
+    }
+
     /* This means there can be some tweets in the buffer */
-    event void Timer.fired() {
+    event void Timer_send.fired() {
         /* If head == tail, then buffer is empty */
         if (head != tail) {
             if (sendBusy) {
                 /* Retry after 10ms */
-                call Timer.startOneShot(10);
+                call Timer_send.startOneShot(10);
             } else if (!sendBusy &&
                     sizeof blogmsg_out <= call AMSend.maxPayloadLength()) {
                 memcpy(call AMSend.getPayload(&sendBuf,
@@ -160,15 +169,19 @@ implementation
                     blogmsg_out.hopCount = 0;
                     blogmsg_out.nchars = tail->nchars;
                     memcpy(blogmsg_out.data, tail->data, tail->nchars);
-                    blogmsg_out.mood = 0;
+                    blogmsg_out.mood = mood;
                     tail = tail->next;
                 }
                 /* There can be more stuff in the queue */
-                call Timer.startOneShot(0);
+                call Timer_send.startOneShot(0);
             }
             if (!sendBusy)
                 report_problem();
         }
     }
 
+    event void Read.readDone(error_t result, uint16_t data) {
+        if (result == SUCCESS)
+            mood = data;
+    }
 }
