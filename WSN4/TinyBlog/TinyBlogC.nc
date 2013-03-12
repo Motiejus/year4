@@ -10,7 +10,6 @@ typedef struct circ_t {
     short nchars;
     nx_uint16_t from; /* SourceMoteID */
     struct circ_t *next;
-    bool nonempty;
 } circular_t;
 
 
@@ -29,8 +28,12 @@ implementation
 {
     message_t sendBuf;
     tinyblog_t blogmsg_out;
+
+    /* Circular tweeter stuff */
     circular_t tweets_circ[STORE_TWEETS];
-    circular_t* avail; /* Next available slot */
+    circular_t *head, /* Next available slot */
+               *tail; /* First message to be sent out. If == head, none. */
+    nx_uint16_t base_station;
     bool sendBusy;
 
     nx_uint8_t followers[MAX_FOLLOWERS];
@@ -44,42 +47,22 @@ implementation
      * Helpers
      **************************************************************************/
     void save_tweet(tinyblog_t *blogmsg) {
-        memset(avail->data, 0, DATA_SIZE);
-        memcpy(avail->data, blogmsg->data, blogmsg->nchars);
-        avail->nchars = blogmsg->nchars;
-        avail->from = blogmsg->sourceMoteID;
-        avail->nonempty = TRUE;
-        avail = avail->next;
+        atomic {
+            if (tail == head) {
+                /* Bad fortune, overwriting a tweet. */
+                tail = tail->next;
+            }
+            memset(head->data, 0, DATA_SIZE);
+            memcpy(head->data, blogmsg->data, blogmsg->nchars);
+            head->nchars = blogmsg->nchars;
+            head->from = blogmsg->sourceMoteID;
+            head = head->next;
+        }
     }
 
-    void get_tweets(nx_uint16_t base_station) {
-        circular_t *old_avail;
-        int i = 0;
-        for (old_avail = avail->next; old_avail != avail; avail = avail->next) {
-            i++;
-            if (avail->nonempty) {
-                blogmsg_out.seqno = i;
-                blogmsg_out.sourceMoteID = TOS_NODE_ID;
-                blogmsg_out.destMoteID = base_station;
-                blogmsg_out.action = GET_TWEETS;
-                blogmsg_out.hopCount = 0;
-                blogmsg_out.nchars = avail->nchars;
-                memcpy(blogmsg_out.data, avail->data, avail->nchars);
-                blogmsg_out.mood = 0;
-
-                if (!sendBusy &&
-                        sizeof blogmsg_out <= call AMSend.maxPayloadLength()) {
-                    memcpy(call AMSend.getPayload(&sendBuf,
-                                sizeof(blogmsg_out)),
-                            &blogmsg_out, sizeof (blogmsg_out));
-                    if (call AMSend.send(AM_BROADCAST_ADDR, &sendBuf,
-                                sizeof blogmsg_out) == SUCCESS)
-                        sendBusy = TRUE;
-                }
-                if (!sendBusy)
-                    report_problem();
-            }
-        }
+    void get_tweets(nx_uint16_t station) {
+        base_station = station;
+        call Timer.startOneShot(0);
     }
 
     bool is_follower(nx_uint8_t id) {
@@ -94,11 +77,9 @@ implementation
         int i;
         for (i = 0; i < STORE_TWEETS - 1; i++) {
             tweets_circ[i].next = &tweets_circ[i+1];
-            tweets_circ[i].nonempty = FALSE;
         }
         tweets_circ[STORE_TWEETS-1].next = &tweets_circ[0];
-        tweets_circ[STORE_TWEETS-1].nonempty = FALSE;
-        avail = tweets_circ;
+        tail = head = tweets_circ;
         num_followers = 0;
     }
 
@@ -112,20 +93,9 @@ implementation
             report_problem();
     }
 
-    void startTimer() {
-        call Timer.startPeriodic(7400);
-    }
+    event void RadioControl.startDone(error_t error) { }
 
-    event void RadioControl.startDone(error_t error) {
-        startTimer();
-    }
-
-    event void RadioControl.stopDone(error_t error) {
-    }
-
-
-    event void Timer.fired() {
-    }
+    event void RadioControl.stopDone(error_t error) { }
 
     event void AMSend.sendDone(message_t* msg, error_t error) {
         if (error == SUCCESS)
@@ -158,7 +128,7 @@ implementation
                         else
                             report_problem();
                 } else if (blogmsg->action == GET_TWEETS) {
-                    /* Host mote requests all tweets, send them */
+                    /* Host mote requests all tweets, send them out */
                     get_tweets(blogmsg->sourceMoteID);
                 }
             }
@@ -166,4 +136,39 @@ implementation
         }
     }
 
- }
+    /* This means there can be some tweets in the buffer */
+    event void Timer.fired() {
+        /* If head == tail, then buffer is empty */
+        if (head != tail) {
+            if (sendBusy) {
+                /* Retry after 10ms */
+                call Timer.startOneShot(10);
+            } else if (!sendBusy &&
+                    sizeof blogmsg_out <= call AMSend.maxPayloadLength()) {
+                memcpy(call AMSend.getPayload(&sendBuf,
+                            sizeof(blogmsg_out)), &blogmsg_out,
+                        sizeof (blogmsg_out));
+                if (call AMSend.send(AM_BROADCAST_ADDR, &sendBuf,
+                            sizeof blogmsg_out) == SUCCESS)
+                    sendBusy = TRUE;
+
+                atomic {
+                    blogmsg_out.seqno = 0; /* TODO */
+                    blogmsg_out.sourceMoteID = TOS_NODE_ID;
+                    blogmsg_out.destMoteID = base_station;
+                    blogmsg_out.action = GET_TWEETS;
+                    blogmsg_out.hopCount = 0;
+                    blogmsg_out.nchars = tail->nchars;
+                    memcpy(blogmsg_out.data, tail->data, tail->nchars);
+                    blogmsg_out.mood = 0;
+                    tail = tail->next;
+                }
+                /* There can be more stuff in the queue */
+                call Timer.startOneShot(0);
+            }
+            if (!sendBusy)
+                report_problem();
+        }
+    }
+
+}
