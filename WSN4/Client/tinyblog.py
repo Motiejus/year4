@@ -45,7 +45,8 @@ class Tweeter:
         if msg.get_amType() == TinyBlogMsg.AM_TYPE:
             m = TinyBlogMsg.TinyBlogMsg(msg.dataGet())
             text = m.data[8:][:m.get_nchars()-1]
-            print ("Tweet from '%d': '%s'" % (m.get_sourceMoteID(), text))
+            print ("Tweet from '%d': '%s'. Mood: '%d'" % \
+                    (m.get_sourceMoteID(), text, m.get_mood()))
         sys.stdout.flush()
 
 
