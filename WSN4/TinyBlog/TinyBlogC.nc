@@ -39,9 +39,9 @@ implementation
     nx_uint8_t followers[MAX_FOLLOWERS];
     nx_uint8_t num_followers;
 
-    void report_problem() { call Leds.led0Toggle(); }
-    void report_sent() { call Leds.led1Toggle(); }
-    void report_received() { call Leds.led2Toggle(); }
+    void report_problem() { call Leds.led0Toggle(); } /* Red */
+    void report_sent() { call Leds.led1Toggle(); } /* Green */
+    void report_received() { call Leds.led2Toggle(); } /* Blue */
 
     /***************************************************************************
      * Helpers
