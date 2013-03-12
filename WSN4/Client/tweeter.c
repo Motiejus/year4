@@ -32,7 +32,7 @@ post_tweet(int fd, int src, int dst, const char *text, size_t length) {
 
     length = length > DATA_SIZE ? DATA_SIZE : length;
 
-    TinyBlogMsg_seqno_set(msg, 0);
+    TinyBlogMsg_seqno_set(msg, 7);
     TinyBlogMsg_sourceMoteID_set(msg, src);
 #if SCEN == 1
     TinyBlogMsg_destMoteID_set(msg, 0);
@@ -50,6 +50,11 @@ post_tweet(int fd, int src, int dst, const char *text, size_t length) {
     if (write_sf_packet(fd, tmsg_data(msg), TINYBLOGMSG_SIZE) == -1) {
         fprintf(stderr, "POST_TWEET write failed\n");
     }
+    printf("Message in hex:\n");
+    for (i = 0; i < TINYBLOGMSG_SIZE; i++) {
+        printf("%02X ", *(uint8_t*)(tmsg_data(msg) + i));
+    }
+    printf("\n");
     free_tmsg(msg);
     free(blogmsg);
     return DATA_SIZE;
@@ -97,12 +102,14 @@ get_a_tweet(int fd, int host_moteid, int user_moteid,
     tmsg = new_tmsg(packet, tmsg_len);
     *text_len = TinyBlogMsg_nchars_get(tmsg);
 
-    printf("Received tweet src=%d, dst=%d, nchars=%d. ",
+    printf("Received tweet msglen=%d, src=%d, dst=%d, nchars=%d. ",
+            tmsg_len,
             TinyBlogMsg_sourceMoteID_get(tmsg),
             TinyBlogMsg_destMoteID_get(tmsg),
             *text_len);
 
-    if (host_moteid == TinyBlogMsg_destMoteID_get(tmsg) &&
+    if (GET_TWEETS == TinyBlogMsg_action_get(tmsg) &&
+            host_moteid == TinyBlogMsg_destMoteID_get(tmsg) &&
             user_moteid == TinyBlogMsg_sourceMoteID_get(tmsg)) {
         printf("Passing on\n");
         if ((*text = malloc(*text_len)) == NULL) {
