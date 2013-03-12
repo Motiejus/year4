@@ -20,6 +20,7 @@ ui(int fd, int host_moteid, int user_moteid) {
         print_help = 1,
         follow_who;
     size_t length;
+    memset(buf, 0, MAX_LINE);
 
     while (cont) {
         int stream;

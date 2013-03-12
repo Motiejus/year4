@@ -12,6 +12,7 @@
 
 #include <sfsource.h>
 #include <message.h>
+#include <serialpacket.h>
 
 #include "tweeter.h"
 #include "TinyBlogMsg_gen.h"
@@ -20,43 +21,62 @@
 int
 post_tweet(int fd, int src, int dst, const char *text, size_t length) {
     size_t i;
-    void *blogmsg;
-    tmsg_t *msg;
+    void *storage, *serialMsg_start, *blogMsg_start;
+    tmsg_t *blogMsg, *serialMsg;
 
-    if ((blogmsg = malloc(TINYBLOGMSG_SIZE)) == NULL) {
+    /* Packet structure:
+     * 00 (1 byte)
+     * spacket (7 bytes)
+     * payload (26 bytes)
+     */
+    uint8_t len = TINYBLOGMSG_SIZE + SPACKET_SIZE + sizeof(uint8_t);
+    if ((storage = malloc(len)) == NULL) {
         perror("malloc"); exit(1);
     }
-    if ((msg = new_tmsg(blogmsg, TINYBLOGMSG_SIZE)) == NULL) {
+    ((uint8_t*)storage)[0] = 0x00;
+
+    serialMsg_start = storage + sizeof(uint8_t);
+    if ((serialMsg = new_tmsg(serialMsg_start, SPACKET_SIZE)) == NULL) {
         fprintf(stderr, "new_tmsg failure\n"); exit(1);
     }
 
+    blogMsg_start = serialMsg_start + SPACKET_SIZE;
+    if ((blogMsg = new_tmsg(blogMsg_start, TINYBLOGMSG_SIZE)) == NULL) {
+        fprintf(stderr, "new_tmsg failure\n"); exit(1);
+    }
     length = length > DATA_SIZE ? DATA_SIZE : length;
 
-    TinyBlogMsg_seqno_set(msg, 7);
-    TinyBlogMsg_sourceMoteID_set(msg, src);
+    spacket_header_dest_set(serialMsg, dst);
+    spacket_header_src_set(serialMsg, src);
+    spacket_header_length_set(serialMsg, TINYBLOGMSG_SIZE);
+    spacket_header_type_set(serialMsg, TINYBLOGMSG_AM_TYPE);
+
+    TinyBlogMsg_seqno_set(blogMsg, 0);
+    TinyBlogMsg_sourceMoteID_set(blogMsg, src);
 #if SCEN == 1
-    TinyBlogMsg_destMoteID_set(msg, 0);
+    TinyBlogMsg_destMoteID_set(blogMsg, 0);
     (void) dst;
 #else
-    TinyBlogMsg_destMoteID_set(msg, dst);
+    TinyBlogMsg_destMoteID_set(blogMsg, dst);
 #endif
-    TinyBlogMsg_action_set(msg, POST_TWEET);
-    TinyBlogMsg_hopCount_set(msg, 0);
-    TinyBlogMsg_nchars_set(msg, length);
+    TinyBlogMsg_action_set(blogMsg, POST_TWEET);
+    TinyBlogMsg_hopCount_set(blogMsg, 0);
+    TinyBlogMsg_nchars_set(blogMsg, length);
     for (i = 0; i < DATA_SIZE; i++)
-        TinyBlogMsg_data_set(msg, i, i < length ? text[i] : '\0');
-    TinyBlogMsg_mood_set(msg, 0);
+        TinyBlogMsg_data_set(blogMsg, i, i < length ? text[i] : '\0');
+    TinyBlogMsg_mood_set(blogMsg, 0);
 
-    if (write_sf_packet(fd, tmsg_data(msg), TINYBLOGMSG_SIZE) == -1) {
+    if (write_sf_packet(fd, storage, len) == -1) {
         fprintf(stderr, "POST_TWEET write failed\n");
     }
-    printf("Message in hex:\n");
-    for (i = 0; i < TINYBLOGMSG_SIZE; i++) {
-        printf("%02X ", *(uint8_t*)(tmsg_data(msg) + i));
+    printf("Packet in hex: ");
+    for (i = 0; i < len; i++) {
+        printf("%02X ", ((uint8_t*)storage)[i]);
     }
     printf("\n");
-    free_tmsg(msg);
-    free(blogmsg);
+    free_tmsg(blogMsg);
+    free_tmsg(serialMsg);
+    free(storage);
     return DATA_SIZE;
 }
 
@@ -82,9 +102,11 @@ post_get_tweets(int fd, int host_moteid, int user_moteid) {
         TinyBlogMsg_data_set(msg, i, '\0');
     TinyBlogMsg_mood_set(msg, 0);
 
+    /*
     if (write_sf_packet(fd, tmsg_data(msg), TINYBLOGMSG_SIZE) == -1) {
         fprintf(stderr, "GET_TWEETS packet write failed\n");
     }
+    */
     free_tmsg(msg);
     free(blogmsg);
 }
