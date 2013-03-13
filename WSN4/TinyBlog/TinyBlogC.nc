@@ -121,8 +121,8 @@ implementation
 
     event message_t* Receive.receive(message_t* bufPtr, 
             void* payload, uint8_t len) {
-        report_received();
         dbg("All", "Received payload of size %d.\n", len);
+        report_received();
 
         if (len != sizeof(tinyblog_t)) {
             return bufPtr;
@@ -194,7 +194,7 @@ implementation
     event void Read.readDone(error_t result, uint16_t data) {
         if (result == SUCCESS) {
             mood = data;
-            dbg("All", "sensed %d", mood);
+            dbg("All", "sensed %d\n", mood);
         }
     }
 }
