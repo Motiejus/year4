@@ -1,1 +1,7 @@
+*.pyc
 /build/
+/simbuild/
+/app.xml
+/TinyBlogMsg.py
+/TOSSIM.py
+/_TOSSIMmodule.so
