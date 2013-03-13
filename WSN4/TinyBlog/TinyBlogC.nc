@@ -50,9 +50,16 @@ implementation
      * Helpers
      **************************************************************************/
     void save_tweet(tinyblog_t *blogmsg) {
+        dbg("All", "saving tweet\n");
         atomic {
             if (tail == head) {
                 /* Bad fortune, overwriting a tweet. */
+                if (tail->nchars >= 1)
+                    tail->data[tail->nchars-1] = '\0';
+                else
+                    tail->data[0] = '\0';
+                dbg("All", "overwriting tweet data: '%s'\n",
+                        tail->data);
                 tail = tail->next;
             }
             memset(head->data, 0, DATA_SIZE);
@@ -96,6 +103,7 @@ implementation
             report_problem();
 
         call Timer_sense.startPeriodic(5000);
+        dbg("All", "Application booted.\n");
     }
 
     event void RadioControl.startDone(error_t error) { }
@@ -114,6 +122,7 @@ implementation
     event message_t* Receive.receive(message_t* bufPtr, 
             void* payload, uint8_t len) {
         report_received();
+        dbg("All", "Received payload of size %d.\n", len);
 
         if (len != sizeof(tinyblog_t)) {
             return bufPtr;
@@ -154,6 +163,8 @@ implementation
                 call Timer_send.startOneShot(10);
             } else if (!sendBusy &&
                     sizeof blogmsg_out <= call AMSend.maxPayloadLength()) {
+                dbg("All", "Sending out tweet of length %d\n",
+                        tail->nchars);
                 memcpy(call AMSend.getPayload(&sendBuf,
                             sizeof(blogmsg_out)), &blogmsg_out,
                         sizeof (blogmsg_out));
@@ -181,7 +192,9 @@ implementation
     }
 
     event void Read.readDone(error_t result, uint16_t data) {
-        if (result == SUCCESS)
+        if (result == SUCCESS) {
             mood = data;
+            dbg("All", "sensed %d", mood);
+        }
     }
 }
