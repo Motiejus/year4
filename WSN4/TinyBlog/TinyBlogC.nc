@@ -99,14 +99,21 @@ implementation
      **************************************************************************/
     event void Boot.booted() {
         initialize_structures();
-        if (call RadioControl.start() != SUCCESS)
+        if (call RadioControl.start() != SUCCESS) {
+            dbg("All", "Problem starting RadioControl\n");
             report_problem();
+        }
 
         call Timer_sense.startPeriodic(5000);
         dbg("All", "Application booted.\n");
     }
 
-    event void RadioControl.startDone(error_t error) { }
+    event void RadioControl.startDone(error_t error) {
+        if (error != SUCCESS)
+            call RadioControl.start();
+        else
+            dbg("All", "RadioControl started fine\n");
+    }
 
     event void RadioControl.stopDone(error_t error) { }
 
@@ -125,6 +132,7 @@ implementation
         report_received();
 
         if (len != sizeof(tinyblog_t)) {
+            dbg("All", "Not tinyblog_t\n");
             return bufPtr;
         } else {
             tinyblog_t* blogmsg = (tinyblog_t*)payload;
@@ -137,10 +145,15 @@ implementation
                         save_tweet(blogmsg);
                 } else if (blogmsg->action == ADD_USER) {
                     if (!is_follower(blogmsg->data[0]))
-                        if (num_followers < MAX_FOLLOWERS - 1)
+                        if (num_followers < MAX_FOLLOWERS - 1) {
+                            dbg("All", "Adding follower %d\n",
+                                    blogmsg->data[0]);
                             followers[num_followers++] = blogmsg->data[0];
-                        else
+                            dbg("All", "Number of followers: %d\n",
+                                    num_followers);
+                        } else {
                             report_problem();
+                        }
                 } else if (blogmsg->action == GET_TWEETS) {
                     /* Host mote requests all tweets, send them out */
                     get_tweets(blogmsg->sourceMoteID);
