@@ -15,7 +15,8 @@ class Action:
 
 def start_nodes(t):
     for i in range(0, 3):
-        t.getNode(i).bootAtTime(i)
+        t.getNode(i).bootAtTime((31 + t.ticksPerSecond() / 10) * i + 1)
+
     [t.runNextEvent() for i in range(60)]
     for i in range(0, 3):
         assert t.getNode(i).isOn(), "m%d is on" % i
@@ -24,34 +25,28 @@ def tick(ntimes):
     [t.runNextEvent() for i in range(ntimes)]
 
 
-def inject_add_user(t):
+def inject_message(t, src, dst, action, data):
     msg = TinyBlogMsg()
-    msg.set_data([3])
-    msg.set_destMoteID(1)
-    msg.set_sourceMoteID(0)
-    msg.set_action(Action.ADD_USER)
+    msg.set_data(data)
+    msg.set_nchars(len(data))
+    msg.set_sourceMoteID(src)
+    msg.set_destMoteID(dst)
+    msg.set_action(action)
     pkt = t.newPacket()
 
     pkt.setData(msg.data)
     pkt.setType(msg.get_amType())
-    pkt.setSource(0)
-    pkt.setDestination(1)
-    pkt.deliverNow(1)
+    pkt.setSource(src)
+    pkt.setDestination(dst)
+    pkt.deliverNow(dst)
 
 
-def inject_post_tweet(t):
-    msg = TinyBlogMsg()
-    msg.set_data([3])
-    msg.set_destMoteID(2)
-    msg.set_sourceMoteID(1)
-    msg.set_action(Action.POST_TWEET)
-    pkt = t.newPacket()
-    pkt.setData(msg.data)
-    pkt.setType(msg.get_amType())
-    pkt.setSource(0)
-    pkt.setDestination(2)
-    pkt.deliverNow(2)
-
+def num_followers(m1):
+    d = m1.getVariable("TinyBlogC.num_followers").getData()
+    try:
+        return ord(d[0])
+    except TypeError:
+        return d
 
 
 def scenario_1(t):
@@ -65,29 +60,31 @@ def scenario_1(t):
 
     How we test it
     1. assert m1.num_followers = 0
-    2. inject "ADD_USER 3" to m2 (as if it originated from m1)
+    2. inject "ADD_USER 2" to m1 (as if it originated from m0)
     3. wait a while
     4. assert m2.followers == 1
     """
     start_nodes(t)
     m1 = t.getNode(1)
-    assert m1.getVariable("TinyBlogC.num_followers").getData() == 0
+    assert num_followers(m1) == 0
 
     tick(10)
-    inject_add_user(t)
+    inject_message(t, 0, 1, Action.ADD_USER, [2])
     tick(10)
 
-    assert m1.getVariable("TinyBlogC.num_followers").getData() == 1
-
+    assert num_followers(m1) == 1
     """
-    5. inject "POST_TWEET" to m3 (from m1) twice
-    6. inject "GET_TWEETS" to m3 (from m1)
-    7. Observe two tweets arriving from m3 to m1 (manually)
+    5. inject "POST_TWEET" to m2 (from m0) twice
+    6. inject "GET_TWEETS" to m1 (from m0)
+    7. Observe two tweets arriving from m1 to m0 (manually)
     """
-    inject_post_tweet(t)
+    inject_message(t, 2, 1, Action.POST_TWEET, map(ord, "aaaa\04"))
     tick(10)
-    inject_post_tweet(t)
+    inject_message(t, 2, 1, Action.POST_TWEET, map(ord, "bbbb\04"))
     tick(10)
+
+    inject_message(t, 0, 1, Action.GET_TWEETS, [])
+    tick(200)
 
 
 if __name__ == '__main__':

@@ -57,16 +57,16 @@ implementation
      * Helpers
      **************************************************************************/
     void save_tweet(tinyblog_t *blogmsg) {
-        dbg("All", "saving tweet\n");
+        dbg("All", "saving tweet from '%d' of length '%d'\n",
+                blogmsg->sourceMoteID, blogmsg->nchars);
         atomic {
-            if (tail == head) {
+            if (tail == head->next) {
                 /* Bad fortune, overwriting a tweet. */
                 if (tail->nchars >= 1)
                     tail->data[tail->nchars-1] = '\0';
                 else
                     tail->data[0] = '\0';
-                dbg("All", "overwriting tweet data: '%s'\n",
-                        tail->data);
+                dbg("All", "overwriting tweet data: '%s'\n", tail->data);
                 tail = tail->next;
             }
             memset(head->data, 0, DATA_SIZE);
@@ -79,6 +79,7 @@ implementation
 
     void get_tweets(nx_uint16_t station) {
         base_station = station;
+        dbg("All", "getting tweets to %d\n", station);
         call Timer_send.startOneShot(0);
     }
 
@@ -176,34 +177,32 @@ implementation
     /* This means there can be some tweets in the buffer */
     event void Timer_send.fired() {
         /* If head == tail, then buffer is empty */
+        size_t maxlen = call AMSend.maxPayloadLength();
         if (head != tail) {
             if (sendBusy) {
                 /* Retry after 10ms */
+                dbg("All", "Send busy\n");
                 call Timer_send.startOneShot(10);
-            } else if (!sendBusy &&
-                    sizeof blogmsg_out <= call AMSend.maxPayloadLength()) {
-                dbg("All", "Sending out tweet of length %d\n",
-                        tail->nchars);
+            } else if (!sendBusy && sizeof (blogmsg_out) <= maxlen) {
+                dbg("All", "Sending out tweet of length %d\n", tail->nchars);
+
+                blogmsg_out.seqno = 0;
+                blogmsg_out.sourceMoteID = TOS_NODE_ID;
+                blogmsg_out.destMoteID = base_station;
+                blogmsg_out.action = GET_TWEETS;
+                blogmsg_out.hopCount = 0;
+                blogmsg_out.nchars = tail->nchars;
+                memcpy(blogmsg_out.data, tail->data, tail->nchars);
+                blogmsg_out.mood = mood;
+                tail = tail->next;
+
                 memcpy(call AMSend.getPayload(&sendBuf,
-                            sizeof(blogmsg_out)), &blogmsg_out,
-                        sizeof (blogmsg_out));
+                            sizeof(blogmsg_out)), &blogmsg_out, sizeof (blogmsg_out));
                 if (call AMSend.send(AM_BROADCAST_ADDR, &sendBuf,
                             sizeof blogmsg_out) == SUCCESS)
                     sendBusy = TRUE;
-
-                atomic {
-                    blogmsg_out.seqno = 0; /* TODO */
-                    blogmsg_out.sourceMoteID = TOS_NODE_ID;
-                    blogmsg_out.destMoteID = base_station;
-                    blogmsg_out.action = GET_TWEETS;
-                    blogmsg_out.hopCount = 0;
-                    blogmsg_out.nchars = tail->nchars;
-                    memcpy(blogmsg_out.data, tail->data, tail->nchars);
-                    blogmsg_out.mood = mood;
-                    tail = tail->next;
-                }
                 /* There can be more stuff in the queue */
-                call Timer_send.startOneShot(0);
+                call Timer_send.startOneShot(20);
             }
             if (!sendBusy)
                 report_problem();
