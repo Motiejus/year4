@@ -25,5 +25,5 @@ implementation
   TinyBlogC.Timer_send -> Timer_send;
   TinyBlogC.Timer_sense -> Timer_sense;
 
-  
+  TinyBlogC.Receive -> AMReceiverC;
 }
