@@ -7,6 +7,8 @@ import sys
 import time
 import struct
 
+from threading import Thread
+
 import TinyBlogMsg
 from tinyos.message import MoteIF
 #from tinyos.message.Message import *
@@ -57,6 +59,12 @@ class Tweeter:
         smsg.set_data(map(ord, msg))
         self.mif.sendMsg(self.tos_source, 0xFFFF, smsg.get_amType(), 0, smsg)
 
+    def poll(self):
+        """Poll for tweets every 10 seconds"""
+        while True:
+            time.sleep(10)
+            self.send_msg(Action.GET_TWEETS, self.user_moteid)
+
 
 def main_loop(tweeter, user_moteid):
     while True:
@@ -85,6 +93,7 @@ def main():
         sys.exit(1)
     tw = Tweeter(sys.argv[1], int(sys.argv[2]))
     tw.set_listener()
+    Thread(target = lambda: tw.poll, args = []).start()
     main_loop(tw, int(sys.argv[3]))
 
 if __name__ == "__main__":
