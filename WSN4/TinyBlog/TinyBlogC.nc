@@ -42,8 +42,15 @@ implementation
     nx_uint8_t followers[MAX_FOLLOWERS];
     nx_uint8_t num_followers;
 
-    void report_problem() { call Leds.led0Toggle(); } /* Red */
-    void report_sent() { call Leds.led1Toggle(); } /* Green */
+    void report_problem() {
+        call Leds.led0Toggle();
+        dbg("All", "Reporting problem\n");
+    } /* Red */
+    void report_sent() { /* Green */
+        call Leds.led1Toggle();
+        dbg("All", "Message sent\n");
+
+    }
     void report_received() { call Leds.led2Toggle(); } /* Blue */
 
     /***************************************************************************
@@ -105,7 +112,6 @@ implementation
         }
 
         call Timer_sense.startPeriodic(5000);
-        dbg("All", "Application booted.\n");
     }
 
     event void RadioControl.startDone(error_t error) {
