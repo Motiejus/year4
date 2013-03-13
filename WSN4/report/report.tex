@@ -57,7 +57,77 @@ For wiring diagram please refer to figure~\ref{fig:wiring_diagram}.
     \label{fig:wiring_diagram}
 \end{figure}
 
-\section{Test methodology}
+\section{Status of the implementation}
+
+\subsection{Client}
+
+Client is able to:
+\begin{enumerate}
+    \item Allow user to post tweets.
+    \item Send these commands: "post tweet", "follow".
+    \item Poll user mote for tweets every 10 seconds.
+\end{enumerate}
+
+See figure~\ref{fig:ui_run} for a screenshot.
+\begin{figure}
+    \centering
+    \includegraphics[width=0.75\textwidth]{ui_run.png}
+    \caption{UI run}
+    \label{fig:ui_run}
+\end{figure}
+
+\subsection{TinyBlog}
+
+TinyBlog mote application has these features implemented:
+\begin{enumerate}
+    \item \texttt{DATA\_SIZE = 100}. It is able to tweet tweets up to 100 bytes
+        long.
+
+    \item \texttt{nchars} is set correctly; EOT is always the last symbol of the
+        message.
+    \item TinyBlog supports protocol commands: post tweet, add user to follow
+        list, retrieve new tweets.
+    \item List of addresses to follow are stored on the mote. They are
+        update-able on run-time.
+    \item LED actions are implemented with one exception: since forwarding is
+        not implemented, red LED is used for error reporting.
+    \item Mood is captured using a temperature sensor and is sent over with the
+        corresponding tweet. Note: only temperature is stored; not light.
+    \item Mote is able to store 8 tweets in memory in a circular buffer.
+\end{enumerate}
+
+Scenario 2 and routing are not implemented. Interoperability was not tested.
+
+\subsection{Tests and evidence}
+
+For this coursework a fraction of these tests were developed: integration tests
+using TOSSIM. Here is the test:
+
+\begin{enumerate}
+    \item Three nodes: m0, m1, m2.
+    \item inject packet from m0 to m1 to "follow m2".
+    \item m2 tweets twice
+    \item m0 asks m1 to GET\_TWEETS
+    \item m0 replies with two tweets
+\end{enumerate}
+
+The test is executed using TOSSIM Python SDK. Currently it does not complete,
+because the mote halts in the last step (while replying the second tweet).
+
+The current test suite is very small and limiting; For future work (in case this
+distributed tweeter is deployed), later I present a much more suitable testing
+methodology.
+
+See figure~\ref{fig:test_suite} for this test run.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.3\textwidth]{test_suite.png}
+    \caption{TOSS test run}
+    \label{fig:test_suite}
+\end{figure}
+
+\section{Should-be test methodology}
 
 While the system looks fairly simple, it has a lot of moving parts, which have
 to be tested well separately and together.
@@ -192,7 +262,6 @@ Communication between host and mote is done as follows:
 \begin{thebibliography}{9}
 
     \bibitem{model-testing}
-
         Broy, M.; Jonsson, B.; Katoen, J.-P.; Leucker, M.; Pretschner, A.
         (Eds.). \emph{Model-Based Testing of Reactive Systems}, ISBN
         978-3-540-26278-7
