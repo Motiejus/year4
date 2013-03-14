@@ -32,8 +32,7 @@
 \section{Introduction}
 \subsection{Identification}
 
-This document is the report of Year 4 Personal Project named "Implement and
-test the Fast Genuine Generalized Consensus algorithm for Networks-on-Chip".
+This document is the report of Year 4 Personal Project.
 
 \section{Rationale}
 
@@ -46,9 +45,9 @@ commodity desktop systems, and servers with 24 cores are more and more widely
 deployed [reference needed].
 
 Future many-core systems in many aspects will look like distributed
-many-computer systems nowadays. Computing units (cores) will be sending messages
-to one another instead of relying on shared memory; this is already done by
-current many-core systems manufacturer Tilera[reference]. Parallella is
+many-computer systems nowadays. Computing units (cores) will be sending
+messages to one another instead of relying on shared memory; this is already
+done by current many-core systems manufacturer Tilera[reference]. Parallella is
 foreseeing systems with 16K cores with similar power requirements of 16 core
 nowadays systems [link or reference needed].
 
@@ -59,10 +58,18 @@ consensus algorithms in many-core systems.
 \section{What we want to do}
 
 Plan is to implement and test Fast Genuine Generalised Consensus algorithm on
-Tilera64 many-core chip. Here is a brief outline of consensus algorithms, and
-justification for the programming language of implementation.
+Tilera64 many-core chip. Section~\ref{sec:paxos-family} presents what consensus
+algorithms are. Section~\ref{sec:many-core} presents very recent changes of
+many-core platforms and computing with them. Section~\ref{sec:manycore-paxos}
+describes why consensus is important on many-core.
+Section~\ref{sec:erlang-paxos} justifies the programming language used for
+consensus implementation.
+
+Section~\ref{sec:paxos-api} shows the API and architecture of classic paxos.
+Section~\ref{sec:future} presents the future work.
 
 \subsection{Consensus and Paxos family overview}
+\label{sec:paxos-family}
 
 Paxos family algorithms are designed for reliably reaching a consensus in a
 distributed system. The most primitive application is reliably learning a value
@@ -77,11 +84,11 @@ database transactions across many database nodes which have local copies of
 data. State machine replication is built on the primitive of choosing a single
 value.
 
-There is one family of algorithms that achieve this, the Paxos family. Classical
-Paxos (the first version of Paxos) was first described by Leslie Lamport in
-1998, but gained attraction only at 2005. As we can see, it is quite recent
-topic. [reference to Classic Paxos]. From then many variations of the algorithm
-emerged.
+There is one family of algorithms that achieve this, the Paxos family.
+Classical Paxos (the first version of Paxos) was first described by Leslie
+Lamport in 1998, but gained attraction only at 2005. As we can see, it is a
+fairly recent topic. [reference to Classic Paxos]. From then many variations of
+the algorithm emerged.
 
 Paxonian algorithms are generally used in state machine replication [make up a
 reference]. One of possible optimizations is that some commands in the state
@@ -89,7 +96,7 @@ machine can be executed in different orders. For example, for two commands that
 manipulate different unrelated accounts order is not important; having this in
 mind some optimizations in consensus algorithm can be implemented.
 
-Generalized Paxos has the property described above; Fast Paxos improves its
+Generalized Paxos has the optimization described above; Fast Paxos improves its
 performance by [insert here], and Fast Genuine Generalized Consensus improves
 Fast Paxos in case of conflicts.
 
@@ -111,7 +118,7 @@ a novel consensus algorithm that reduces recovery delay when a collision occurs
 to one.
 
 \subsubsection{Changes in many-core platforms}
-
+\label{many-core}
 
 Tilera(r?) is a multi-core machine producer which takes novel approach in
 memory management. Main (DDR3) memory is shared amongst the cores, however,
@@ -165,7 +172,7 @@ following features:
 requirements can vary dynamically. Processes have no shared
 memory\footnote{They do in some circumstances for efficiency reasons, but this
 is completely transparent to the programmer} and communicate by asynchronous
-message passing. 
+message passing.
 
 {\em Distribution:} Erlang is designed to be run in a distributed
 environment: it is as easy to create a process and communicate to
