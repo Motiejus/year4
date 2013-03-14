@@ -93,9 +93,9 @@ single value.
 
 There is one family of algorithms that achieve this, the Paxos family.
 Classical Paxos (the first version of Paxos) was first described by Leslie
-Lamport in 1998\cite{classic-paxos}, but gained attraction only at 2005. As we
-can see, it is a fairly recent topic. From then many variations of the algorithm
-emerged.
+Lamport in 1998\cite{classic-paxos}, but gained attraction only at
+2001\cite{paxos-simple}. As we can see, it is a fairly recent topic. From then
+many variations of the algorithm emerged.
 
 Paxonian algorithms are generally used in state machine replication [make up a
 reference]. One of possible optimizations is that some commands in the state
@@ -112,7 +112,7 @@ Fast Paxos in case of conflicts.
 FGGC belongs to the family of Paxos algorithms. Its characteristics are similar
 to Fast Paxos, but with better recovery options.
 
-From abstract[1]:
+From abstract\cite{fggc}:
 
 Consensus is a central primitive for building replicated systems, but its
 latency constitutes a bottleneck. A well-known solution to consensus is Fast
@@ -229,6 +229,9 @@ These are left for Erlang part:
 \clearpage
 \begin{thebibliography}{9}
 
+    \bibitem{fggc} Sutra,~P. \emph{Fast Genuine Generalized Consensus}. Reliable
+        Distributed Systems (SRDS), 2011 30th IEEE Symposium.
+
     \bibitem{hipe} Sagonas,~K., Wilhelmsson,~J. \emph{Efficient memory
         management for concurrent programs that use message passing}. Science of
         Computer Programming, 62(2): p.~98-121, October 2006.
@@ -255,6 +258,9 @@ These are left for Erlang part:
         Transactions on Computer Systems (TOCS). Volume 16 Issue 2, May~1998.
         p.~133-169.
 
+    \bibitem{paxos-simple} Lamport., L. \emph{Paxos made simple}. ACM SIGACT
+        News (Distributed Computing Column) 32, 4 (Whole Number 121, December
+        2001) p.~51-58.
 
 \end{thebibliography}
 \end{document}
