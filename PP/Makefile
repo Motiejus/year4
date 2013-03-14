@@ -1,7 +1,15 @@
-report.pdf: report.tex
-	pdflatex $<
+.PHONY: all clean
 
-.PHONY: clean
+all: report.pdf
+
+pdflatex=while (pdflatex report; grep -q "Rerun to" report.log) do true; done
+
+report.toc: report.tex
+	$(call pdflatex)
+
+report.pdf: report.toc report.tex
+	$(call pdflatex)
 
 clean:
-	rm -f report.aux report.log report.out report.toc report.log texput.log
+	rm -f *.pyc
+	rm -f report.aux report.log report.pdf report.toc report.out
