@@ -19,7 +19,6 @@
 \date{13 March 2012}
 
 \maketitle
-\pagebreak
 \tableofcontents
 \pagebreak
 
@@ -48,7 +47,7 @@ For TinyBlog the following applications were used:
     \item SensirionSht11C for sensing environment temperature.
 \end{itemize}
 
-For wiring diagram please refer to figure~\ref{fig:wiring_diagram}.
+For wiring diagram refer to figure~\ref{fig:wiring_diagram}.
 
 \begin{figure}
     \centering
@@ -56,6 +55,42 @@ For wiring diagram please refer to figure~\ref{fig:wiring_diagram}.
     \caption{TinyBlogAppC wiring diagram}
     \label{fig:wiring_diagram}
 \end{figure}
+
+Communication between host and mote is done as follows:
+\begin{enumerate}
+    \item \texttt{tinyblog.py} connects to serial forwarder.
+    \item serial forwarder connects to serial port and talks to BaseStation
+        (included in the archive)
+    \item BaseStation forwards messages received from \texttt{tinyblog.py} to
+        the user's mote.
+\end{enumerate}
+
+\subsection{Encryption}
+
+Justification for encryption in this application is to encrypt the traffic
+between base station and user's mote. Motivation: others might fake a "follow"
+request on behalf of the mote owner, which can be not desired. For that
+authentication and encryption are necessary.
+
+Currently there are many libraries that transparently can do encryption. In
+normal server-client communications it is easy. If motes had more power, I would
+suggest introducing asymmetric key exchange based encryption followed with
+symmetric encrypted communication (equivalent model to OpenSSH or TLS). However,
+additional work has to be performed in order to find suitable algorithms
+suitable for low-power devices.
+
+Note that it is likely to be very difficult to use a powerful enough encryption
+scheme which will not cripple the mote because of the processing requirements.
+
+\subsection{Authentication}
+
+Authentication without encryption is security through obscurity, so does not
+make much sense. Once encryption mechanisms are in place, every request to
+user's mote can be accompanied by a simple password.
+
+More advanced authentication techniques are possible, like using a pseudo-random
+sequence instead of a password. However, advanced authentication schemes are out
+of the scope of this report.
 
 \section{Status of the implementation}
 
@@ -118,7 +153,7 @@ The current test suite is very small and limiting; For future work (in case this
 distributed tweeter is deployed), later I present a much more suitable testing
 methodology.
 
-See figure~\ref{fig:test_suite} for this test run.
+See figure~\ref{fig:test_suite} for a screnshot of this test run.
 
 \begin{figure}
     \centering
@@ -155,7 +190,9 @@ TinyBlog application.
 \subsection{Component testing}
 
 First all components should be tested separately using classic unit tests. Like
-mentioned before, unit tests should not require any TinyOS environment.
+mentioned before, unit tests should not require any TinyOS environment. With a
+modular architecture, some generic applications (like circular buffer or data
+structures) can be reused from other projects. from other projects.
 
 Here are a few examples how certain parts of TinyBlog can be tested in unit
 tests.
@@ -176,9 +213,9 @@ test approach is needed.
 Routing should be encapsulated in a library which does depend on neither NesC
 nor TinyOS. All "send message" calls should be abstracted in a way that routing
 library should be in plain C, therefore executable on a commodity machine.
-"Send message", "receive message" calls should be easy to mock. In other words,
-the library must give tools to insert user's implementation of the mentioned
-commands.
+"Send message", "receive message" calls should be easy to mock, so the library
+can be suited for any kind of testing environment. In other words, the library
+must give tools to insert user's implementation of the mentioned commands.
 
 Once the routing libray is written in NesC-and-TinyOS-independent way, it is
 possible to extensively test it. There should be two kind of tests. First, a
@@ -188,17 +225,22 @@ most of the cases.
 
 In reality many component tests go as far as human-writen unit tests. However,
 human testing suffers from one limitation: humans are lazy. Complex systems
-explode in states, and writing very many different transitions of a complex
-state machine is not feasible for a human. To tackle this problem another
-approach was developed: model-based testing of stateful
+explode in number of states, and writing very many different transitions of a
+complex state machine is not feasible for a human. To tackle this problem
+another approach was developed: model-based testing of stateful
 systems\cite{model-testing}. Briefly saying, the test harness gives a model of
 the system that is about to be tested, and the property-based testing tool
 generates these state transitions at the same time verifying that the model
 behaves correctly.
 
-While this might sound initially complicated, but it is not. Testing routing is
-a very good use case for property-based model testing. Here I will briefly
-describe an example model for testing diffusion based routing.
+In other words, a programmer writes a set of ways how the state can be
+transformed, and the tester creates the states randomly. It is similar to
+generating the test cases; however, this approach has the whole machinery for 
+testing state machines.
+
+While this might sound complicated, but it is not. Testing routing is a very
+good use case for property-based model testing. Here I will briefly describe an
+example model for testing diffusion based routing.
 
 \begin{description}
     \item[Initial state:] zero nodes.
@@ -216,6 +258,9 @@ describe an example model for testing diffusion based routing.
 
 Given that model to the tool, it will interact with it in many random ways and
 will create the huge number of states which we were aiming for.
+
+In summary, these kind of tests interact with the system in many unexpected
+ways, and many obscure corner-case bugs are discovered that way.
 
 \subsubsection{Tweeter tests}
 
@@ -249,15 +294,6 @@ to all software-engineering projects and has nothing specific to TinyBlog
 application, I will not go to this part in detail.
 
 \subsection{Host-Mote communication}
-
-Communication between host and mote is done as follows:
-\begin{enumerate}
-    \item \texttt{tinyblog.py} connects to serial forwarder.
-    \item serial forwarder connects to serial port and talks to BaseStation
-        (included in the archive)
-    \item BaseStation forwards messages received from \texttt{tinyblog.py} to
-        the user's mote.
-\end{enumerate}
 
 \begin{thebibliography}{9}
 
