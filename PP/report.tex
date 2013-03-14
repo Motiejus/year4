@@ -36,24 +36,32 @@ This document is the report of Year 4 Personal Project.
 
 \section{Rationale}
 
-During the last decade Moore's law had changed the rules of machine
-performance. Clock speeds used to double every three years [reference needed].
-However, recently frequency limits have been reached due to minimum possible
-sizes of the chips. On the other hand, given clock speed limits, number of
-cores on a chip started increasing rapidly. 8-core CPUs are now very common in
-commodity desktop systems, and servers with 24 cores are more and more widely
-deployed [reference needed].
+During the last decade Moore's law had changed the rules of machine performance.
+Clock speeds used to double every three years. However, recently frequency
+limits have been reached due to minimum possible sizes of the chips. On the
+other hand, given clock speed limits, number of cores on a chip started
+increasing rapidly. 8-core CPUs are now very common in commodity desktop
+systems, and servers with 24 cores are more and more widely deployed.
 
-Future many-core systems in many aspects will look like distributed
-many-computer systems nowadays. Computing units (cores) will be sending
-messages to one another instead of relying on shared memory; this is already
-done by current many-core systems manufacturer Tilera[reference]. Parallella is
-foreseeing systems with 16K cores with similar power requirements of 16 core
-nowadays systems [link or reference needed].
+In order to go further improving the performance, increasing the frequency does
+not pay off; other approach is needed. According to inverse Pollack's
+rule\cite{pollack}, highest computational bandwidth will be achieved by
+parallelizing the work on many small cores\cite{1kcorechips}. This is where the
+future of microprocessors is heading to: having more less powerful cores to do
+the work\cite{future-microprocessors}.
 
-Since cores will be much smaller and less reliable, future many-core systems
-need redundancy in order to be robust. Hence the reason for investigating
-consensus algorithms in many-core systems.
+In current systems data exchange between cores is handled via shared memory,
+while maintaining the coherency of the CPUs caches. Conversely, Tilera employed
+a faster approach alongside: a high-bandwidth low-latency switched network
+between the cores, which can be used by applications for very fast and low
+latency data exchange directly between the CPUs\cite{tile64}.
+
+From functional perspective, this kind of many-core system in many aspects
+resembles a many-node cluster. Machines (tiles) communicate with each other by
+sending messages; machines (tiles) can fail; they have to synchronize their
+actions (think about locks and mutexes, which are much more complicated without
+having shared memory). Since message-passing distributed systems come into play,
+it is important to investigate consensus algorithms in many-core systems.
 
 \section{What we want to do}
 
@@ -61,12 +69,11 @@ Plan is to implement and test Fast Genuine Generalised Consensus algorithm on
 Tilera64 many-core chip. Section~\ref{sec:paxos-family} presents what consensus
 algorithms are. Section~\ref{sec:many-core} presents very recent changes of
 many-core platforms and computing with them. Section~\ref{sec:manycore-paxos}
-describes why consensus is important on many-core.
-Section~\ref{sec:erlang-paxos} justifies the programming language used for
-consensus implementation.
+describes why consensus is important on many-core. Section~\ref{sec:erlang-why}
+explains why Erlang is well suited for many-core applications.
 
 Section~\ref{sec:paxos-api} shows the API and architecture of classic paxos.
-Section~\ref{sec:future} presents the future work.
+Section~\ref{sec:discussion} presents discussion and the future work.
 
 \subsection{Consensus and Paxos family overview}
 \label{sec:paxos-family}
@@ -118,17 +125,17 @@ a novel consensus algorithm that reduces recovery delay when a collision occurs
 to one.
 
 \subsubsection{Changes in many-core platforms}
-\label{many-core}
+\label{sec:many-core}
 
-Tilera(r?) is a multi-core machine producer which takes novel approach in
-memory management. Main (DDR3) memory is shared amongst the cores, however,
-what happens with caches is left completely up to the programmer to decide.  If
-tasks in cores are separated and are working on different data sets, then, for
-example, cache coherency can be turned off completely and, where
-synchronization is necessary, program can benefit from User Data Network(?)
-(UDN), which allows sending messages between cores with low latency and high
-bandwidth (sending a [MSG SIZE] message to adjacent core takes only a few ticks,
-which makes total bandwidth over 30Gb/s).
+Tilera is a multi-core machine producer which takes novel approach in memory
+management. Main (DDR3) memory is shared amongst the cores, however, what
+happens with caches is left completely up to the programmer to decide. If tasks
+in cores are separated and are working on different data sets, then, for
+example, cache coherency can be turned off completely and, where synchronization
+is necessary, program can benefit from User Data Network(?) (UDN), which allows
+sending messages between cores with low latency and high bandwidth (sending a
+[MSG SIZE] message to adjacent core takes only a few ticks, which makes total
+bandwidth over 30Gb/s).
 
 With this many-core approach is more natural to look at every core like to an
 independent worker, or actor, and design the system which does not use shared
@@ -222,9 +229,28 @@ These are left for Erlang part:
 \clearpage
 \begin{thebibliography}{9}
 
-    \bibitem{hipe} Konstantinos Sagonas, and Jesper Wilhelmsson \emph{Efficient
-    memory management for concurrent programs that use message passing}.
-    Science of Computer Programming, 62(2):98--121, October 2006.
+    \bibitem{hipe} Sagonas, K., Wilhelmsson, J. \emph{Efficient memory
+        management for concurrent programs that use message passing}. Science of
+        Computer Programming, 62(2):98--121, October 2006.
+
+    \bibitem{1kcorechips} Borkar, S. \emph{Thousand Core Chips—A Technology
+        Perspective}. DAC '07 Proceedings of the 44th annual Design Automation
+        Conference Pages 746-749.
+
+    \bibitem{pollack} Pollack, F. \emph{Pollack's Rule of Thumb for Microprocessor
+        Performance and Area.}
+
+    \bibitem{future-microprocessors} Borkar S., A. Chien A. A. \emph{The Future
+        of Microprocessors}. Communications of the ACM, Vol. 54 No. 5, Pages
+        67-77.
+
+    \bibitem{tile64} Bell, S., Edwards, B., Amann, J., Conlin, R.,
+        Joyce, K., Leung, V., MacKay, J., Reif, M., Bao, L., Brown, J.,
+        Mattina, M., Miao, Chyi-Chang, Ramey, C., Wentzlaff, D.,
+        Anderson, W., Berger, E., Fairbanks, N., Khan, D., Montenegro, F.,
+        Stickney, J., Zook, J. \emph{TILE64 - Processor: A 64-Core SoC with
+        Mesh Interconnect}. Solid-State Circuits Conference, 2008. ISSCC 2008.
+        Digest of Technical Papers. IEEE International. p. 88-598.
 
 \end{thebibliography}
 \end{document}
