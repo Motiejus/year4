@@ -86,16 +86,16 @@ majority of acceptors. In worse case no value will be chosen.
 
 The most popular application is distributed state machine implementation: a
 majority of cluster nodes can use this algorithm to agree on an order in which
-to execute a series of commands. For example, this is useful to synchronize
-database transactions across many database nodes which have local copies of
-data. State machine replication is built on the primitive of choosing a single
-value.
+to execute a series of commands. A classical example for this is database
+transaction synchronization across many database nodes, which have local copies
+of data. State machine replication is built on the primitive of choosing a
+single value.
 
 There is one family of algorithms that achieve this, the Paxos family.
 Classical Paxos (the first version of Paxos) was first described by Leslie
-Lamport in 1998, but gained attraction only at 2005. As we can see, it is a
-fairly recent topic. [reference to Classic Paxos]. From then many variations of
-the algorithm emerged.
+Lamport in 1998\cite{classic-paxos}, but gained attraction only at 2005. As we
+can see, it is a fairly recent topic. From then many variations of the algorithm
+emerged.
 
 Paxonian algorithms are generally used in state machine replication [make up a
 reference]. One of possible optimizations is that some commands in the state
@@ -229,28 +229,32 @@ These are left for Erlang part:
 \clearpage
 \begin{thebibliography}{9}
 
-    \bibitem{hipe} Sagonas, K., Wilhelmsson, J. \emph{Efficient memory
+    \bibitem{hipe} Sagonas,~K., Wilhelmsson,~J. \emph{Efficient memory
         management for concurrent programs that use message passing}. Science of
-        Computer Programming, 62(2):98--121, October 2006.
+        Computer Programming, 62(2): p.~98-121, October 2006.
 
-    \bibitem{1kcorechips} Borkar, S. \emph{Thousand Core Chips—A Technology
+    \bibitem{1kcorechips} Borkar,~S. \emph{Thousand Core Chips—A Technology
         Perspective}. DAC '07 Proceedings of the 44th annual Design Automation
-        Conference Pages 746-749.
+        Conference. p.~746-749.
 
-    \bibitem{pollack} Pollack, F. \emph{Pollack's Rule of Thumb for Microprocessor
-        Performance and Area.}
+    \bibitem{pollack} Pollack,~F. \emph{Pollack's Rule of Thumb for
+        Microprocessor Performance and Area.}
 
-    \bibitem{future-microprocessors} Borkar S., A. Chien A. A. \emph{The Future
-        of Microprocessors}. Communications of the ACM, Vol. 54 No. 5, Pages
-        67-77.
+    \bibitem{future-microprocessors} Borkar~S., Chien,~ A.~A. \emph{The Future
+        of Microprocessors}. Communications of the ACM, Vol. 54 No. 5, p.~67-77.
 
-    \bibitem{tile64} Bell, S., Edwards, B., Amann, J., Conlin, R.,
-        Joyce, K., Leung, V., MacKay, J., Reif, M., Bao, L., Brown, J.,
-        Mattina, M., Miao, Chyi-Chang, Ramey, C., Wentzlaff, D.,
-        Anderson, W., Berger, E., Fairbanks, N., Khan, D., Montenegro, F.,
-        Stickney, J., Zook, J. \emph{TILE64 - Processor: A 64-Core SoC with
+    \bibitem{tile64} Bell,~S., Edwards,~B., Amann,~J., Conlin,~R.,
+        Joyce,~K., Leung,~V., MacKay,~J., Reif,~M., Bao,~L., Brown,~J.,
+        Mattina,~M., Miao,~Chyi-Chang, Ramey,~C., Wentzlaff,~D.,
+        Anderson,~W., Berger,~E., Fairbanks,~N., Khan,~D., Montenegro,~F.,
+        Stickney,~J., Zook,~J. \emph{TILE64 -- Processor: A 64-Core SoC with
         Mesh Interconnect}. Solid-State Circuits Conference, 2008. ISSCC 2008.
-        Digest of Technical Papers. IEEE International. p. 88-598.
+        Digest of Technical Papers. IEEE International. p.~88-598.
+
+    \bibitem{classic-paxos} Lamport, L. \emph{The part-time parliament}. ACM
+        Transactions on Computer Systems (TOCS). Volume 16 Issue 2, May~1998.
+        p.~133-169.
+
 
 \end{thebibliography}
 \end{document}
