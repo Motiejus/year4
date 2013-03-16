@@ -56,3 +56,9 @@ Stages to get it:
 1. Classic paxos for single election
 2. State machine for classic paxos
 ...
+
+Links
+=====
+
+http://www.it.uu.se/research/upmarc/publications/researchers?printable=yes
+http://www.release-project.eu/
