@@ -34,7 +34,26 @@
 
 This document is the report of Year 4 Personal Project.
 
-\section{Rationale}
+\subsection{Abstract}
+
+Current many-core chips look alike to many-node clusters. Many-core systems,
+like many-machine systems, need redundancy in order to be robust.
+Synchronization techniques used in cluster computing start applying in smaller
+scale, for many-core chips. In this project we research ability of an
+application of distributed synchronization, state machine replication, on a
+many-core chip.
+
+The plan is to implement and test Fast Genuine Generalised Consensus algorithm
+in Erlang on TILE64, a 64-core chip. Section~\ref{sec:many-core} presents how
+computing in many-core systems changed recently. Section~\ref{sec:paxos-family}
+presents what consensus algorithms are. Section~\ref{sec:erlang-why} explains
+why Erlang was chosen for this application.
+
+Section~\ref{sec:paxos-api} shows the API and architecture of classic paxos.
+Section~\ref{sec:discussion} presents discussion and the future work.
+
+\section{Changes in many-core platforms}
+\label{sec:many-core}
 
 During the last decade Moore's law had changed the rules of machine performance.
 Clock speeds used to double every three years. However, recently frequency
@@ -63,19 +82,7 @@ actions (think about locks and mutexes, which are much more complicated without
 having shared memory). Since message-passing distributed systems come into play,
 it is important to investigate consensus algorithms in many-core systems.
 
-\section{What we want to do}
-
-Plan is to implement and test Fast Genuine Generalised Consensus algorithm on
-Tilera64 many-core chip. Section~\ref{sec:paxos-family} presents what consensus
-algorithms are. Section~\ref{sec:many-core} presents very recent changes of
-many-core platforms and computing with them. Section~\ref{sec:manycore-paxos}
-describes why consensus is important on many-core. Section~\ref{sec:erlang-why}
-explains why Erlang is well suited for many-core applications.
-
-Section~\ref{sec:paxos-api} shows the API and architecture of classic paxos.
-Section~\ref{sec:discussion} presents discussion and the future work.
-
-\subsection{Consensus and Paxos family overview}
+\section{Consensus and Paxos family overview}
 \label{sec:paxos-family}
 
 Paxos family algorithms are designed for reliably reaching a consensus in a
@@ -97,20 +104,40 @@ Lamport in 1998\cite{classic-paxos}, but gained attraction only at
 2001\cite{paxos-simple}. As we can see, it is a fairly recent topic. From then
 many variations of the algorithm emerged.
 
-Paxonian algorithms are generally used in state machine replication [make up a
-reference]. One of possible optimizations is that some commands in the state
-machine can be executed in different orders. For example, for two commands that
-manipulate different unrelated accounts order is not important; having this in
-mind some optimizations in consensus algorithm can be implemented.
+Paxos algorithms are used primarily for synchronizing distributed systems. A few
+notable examples: Google uses Paxos in their distributed locking service
+Chubby\cite{chubby} (which is an important building block of BigTable). Another
+example is OpenReplica\cite{openreplica}, where Paxos is used for replicated
+state machine implementation.
 
-Generalized Paxos has the optimization described above; Fast Paxos improves its
-performance by [insert here], and Fast Genuine Generalized Consensus improves
-Fast Paxos in case of conflicts.
+Classical way to implement a replicated state machine is very nicely explained
+in\cite{paxos-simple}: \emph{To guarantee that all servers execute the same
+    sequence of state machine commands, we implement a sequence of separate
+    instances of the Paxos consensus algorithm, the value chosen by the $i^{th}$
+instance being the $i^{th}$ state machine command in the sequence.}
+
+While this is simple and reliable, sometimes is inefficient. Two commands issued
+in parallel can \emph{interfere} or \emph{commute}. \emph{Commute} means the
+order of execution does not matter; likewise, \emph{interfering} commands must
+be executed in the same order. For example, the order of two \emph{deposit}
+operations on the same account does not matter, so these two commands
+\emph{commute}. Likewise, two commands always commute if they are executed on
+different accounts. However, \emph{deposit} and \emph{withdrawal} of the same
+account must be executed in the same order as they can produce different
+outcomes (negative balance) if executed in different orders.
+
+\emph{In many systems, concurrently issued commands almost always commute. An
+    implementation that saves a message delay in almost all cases can be
+    significantly more efficient than one using the conventional state-machine
+approach.}
+
+Generalized Consensus and Paxos generalizes state-machine approach by reaching
+an agreement on a partially ordered set of commands.
+
+\fggc improves Generalized Paxos in case of collision from six message delays to
+one.
 
 \subsection{Overview of Fast Genuine Generalized Consensus (FGGC)}
-
-FGGC belongs to the family of Paxos algorithms. Its characteristics are similar
-to Fast Paxos, but with better recovery options.
 
 From abstract\cite{fggc}:
 
@@ -119,61 +146,34 @@ latency constitutes a bottleneck. A well-known solution to consensus is Fast
 Paxos. In a recent paper, Lamport enhances Fast Paxos by leveraging the
 commutativity of concurrent commands. The new primitive, called Generalized
 Paxos, reduces the collision rate, and thus the latency of Fast Paxos. However
-if a collision occurs, the latency of Generalized Paxos equals six
-communication steps, which is higher than Fast Paxos. This paper presents FGGC,
-a novel consensus algorithm that reduces recovery delay when a collision occurs
-to one.
-
-\subsubsection{Changes in many-core platforms}
-\label{sec:many-core}
-
-Tilera is a multi-core machine producer which takes novel approach in memory
-management. Main (DDR3) memory is shared amongst the cores, however, what
-happens with caches is left completely up to the programmer to decide. If tasks
-in cores are separated and are working on different data sets, then, for
-example, cache coherency can be turned off completely and, where synchronization
-is necessary, program can benefit from User Data Network(?) (UDN), which allows
-sending messages between cores with low latency and high bandwidth (sending a
-[MSG SIZE] message to adjacent core takes only a few ticks, which makes total
-bandwidth over 30Gb/s).
-
-With this many-core approach is more natural to look at every core like to an
-independent worker, or actor, and design the system which does not use shared
-memory, but sends messages instead. Like discussed, sending messages and not
-having the requirement to have consistent CPU caches decreases performance
-penalty and allows the system to scale.
-
-\subsubsection{Synchronization}
-
-We decided to implement and evaluate the performance of \fggc on a 64-core
-machine.
+if a collision occurs, the latency of Generalized Paxos equals six communication
+steps, which is higher than Fast Paxos. This paper presents FGGC, a novel
+consensus algorithm that reduces recovery delay when a collision occurs to one.
 
 \subsection{Language Choice}
 
 The language decision was based on these factors:
 \begin{enumerate}
-    \item Language can run on Tilera64
-    \item How well is it suitable for algorithm implementation
-    \item Performance
-    \item Memory footprint
+    \item It can run on Tilera64.
+    \item How well is it suitable for parallel algorithm implementation.
+    \item Performance.
+    \item Memory footprint.
 \end{enumerate}
 
-Initially Haskell was chosen for the algorithm implementation. It is very
-convenient to program state machines in a functional language; it compiles to
-machine code, which makes it a good candidate for performance. Furthermore, it
-has an llvm compiler, which is a promising sign for portability.
+Initially Haskell was chosen for the algorithm implementation, for a few
+reasons. It is very convenient to program state machines in a functional
+language; it compiles to machine code, which makes it a good candidate for
+performance. Furthermore, llvm compiler looked like a promising sign for
+portability.
 
-However, after some research it turned out that whole GHC must be ported to
-Tilera64 to able to compile a program. Normal cross-compilation with GHC is not
-possible, and cross-compilator for GHC was not the focus of the project, so it
-was chosen not to be implemented.
+However, after some research it turned out that cross-compilation is impossible,
+and the whole GHC must be ported to Tilera platform. Porting GHC to Tilera was
+out of the scope of the project, so other languages were considered.
 
-Then we considered Erlang, because Erlang was specifically designed for
-distributed systems, so it share the aims of our work, but is also a very
-mature platform.
-
-Erlang is a language based on the  {\em actor model}, characterized by the
-following features:
+Another language candidate was Erlang. Erlang is a general-purpose, concurrent,
+and functional programming language developed by Engineers from Ericsson in
+1980s. Erlang is a language based on the  {\em actor model}, characterized by
+the following features:
 
 {\em Concurrency:} Erlang has extremely lightweight processes whose memory
 requirements can vary dynamically. Processes have no shared
@@ -185,16 +185,17 @@ message passing.
 environment: it is as easy to create a process and communicate to
 it on a host node like on a remote node.
 
+The most appealing feature of Erlang is its approach to concurrency. Erlang {\em
+actors} and message passing are higher-level synchronization primitives than
+mutexes and condition variables. Erlang system can spawn millions of processes,
+and does a very good job in parallelizing their work.
+
 Erlang is written in C and requires very standard tools to (cross-)compile and
 run it. Supported platforms includes any Unix system, vxworks, Linux and
 Windows. Older version of Erlang (R13B) has been cross-compiled and ran on
 Tilera Multi-core Development Environment (MDE) version 2. Some patches to the
 build system were necessary to compile newer version of Erlang (R15B02) on the
 version 3 of Tilera MDE. They have been submitted upstream.
-
-Like mentioned before, Erlang language is based on workers, or {\em actors},
-doing different things and communicating with messages. This fits many-core
-programming approach quite well.
 
 \subsection{About Erlang Run Time System (ERTS)}
 
@@ -227,7 +228,7 @@ These are left for Erlang part:
 
 
 \clearpage
-\begin{thebibliography}{9}
+\begin{thebibliography}{99}
 
     \bibitem{fggc} Sutra,~P. \emph{Fast Genuine Generalized Consensus}. Reliable
         Distributed Systems (SRDS), 2011 30th IEEE Symposium.
@@ -254,13 +255,24 @@ These are left for Erlang part:
         Mesh Interconnect}. Solid-State Circuits Conference, 2008. ISSCC 2008.
         Digest of Technical Papers. IEEE International. p.~88-598.
 
-    \bibitem{classic-paxos} Lamport, L. \emph{The part-time parliament}. ACM
+    \bibitem{classic-paxos} Lamport,~L. \emph{The part-time parliament}. ACM
         Transactions on Computer Systems (TOCS). Volume 16 Issue 2, May~1998.
         p.~133-169.
 
-    \bibitem{paxos-simple} Lamport., L. \emph{Paxos made simple}. ACM SIGACT
+    \bibitem{paxos-simple} Lamport.,~L. \emph{Paxos made simple}. ACM SIGACT
         News (Distributed Computing Column) 32, 4 (Whole Number 121, December
         2001) p.~51-58.
+
+    \bibitem{generalized-consensus} Lamport.~L. \emph{Generalized Consensus and
+        Paxos}. Microsoft Research Technical Report MSR-TR-2005-33.
+
+    \bibitem{chubby} Burrows,~M. \emph{The Chubby lock service for
+        loosely-coupled distributed systems}. OSDI '06 Proceedings of the 7th
+        symposium on Operating systems design and implementation. p. 335-350.
+
+    \bibitem{openreplica} Altinbuken,~D., Emin~Gun.,~S. \emph{Commodifying
+        Replicated State Machines with OpenReplica}. Computing and
+        Information Science Technical Reports, Cornell University.
 
 \end{thebibliography}
 \end{document}
