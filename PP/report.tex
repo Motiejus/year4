@@ -47,7 +47,8 @@ The plan is to implement and test Fast Genuine Generalised Consensus algorithm
 in Erlang on TILE64, a 64-core chip. Section~\ref{sec:many-core} presents how
 computing in many-core systems changed recently. Section~\ref{sec:paxos-family}
 presents what consensus algorithms are. Section~\ref{sec:erlang-why} explains
-why Erlang was chosen for this application.
+why Erlang was chosen for this application and section~\ref{sec:erlang-eval}
+evaluates Erlang suitability for many-core platforms.
 
 Section~\ref{sec:paxos-api} shows the API and architecture of classic paxos.
 Section~\ref{sec:discussion} presents discussion and the future work.
@@ -151,6 +152,7 @@ steps, which is higher than Fast Paxos. This paper presents FGGC, a novel
 consensus algorithm that reduces recovery delay when a collision occurs to one.
 
 \subsection{Language Choice}
+\ref{sec:erlang-why}
 
 The language decision was based on these factors:
 \begin{enumerate}
@@ -199,21 +201,35 @@ version 3 of Tilera MDE. They have been submitted upstream.
 
 \subsection{About Erlang Run Time System (ERTS)}
 
-Under the hood Erlang virtual machine is a bytecode interpreter\footnote{for
-x86 systems there is an optional native code compiler, which aims to improve
-computational performance\cite{hipe}}. Erlang itself is an OS process, which
-main building parts are {\em schedulers} and {\em processes}. Erlang processes
-are light-weight (grow and shrink dynamically) with small memory footprint,
-fast to create and terminate and the scheduling overhead is low. These are
-scheduled by Erlang run-time system. {\em Scheduler} is an OS thread which
-schedules the Erlang processes. By default Erlang creates as many schedulers as
-there are cores available.
+Under the hood Erlang virtual machine is a bytecode interpreter\footnote{for x86
+systems there is an optional native code compiler \emph{hipe}\cite{hipe}, which
+aims to improve computational performance}. Erlang itself is an OS process,
+which main building parts are {\em schedulers} and {\em processes}. Erlang
+processes are light-weight (grow and shrink dynamically) with small memory
+footprint, fast to create and terminate and the scheduling overhead is low.
+These are scheduled by Erlang run-time system. {\em Scheduler} is an OS thread
+which schedules the Erlang processes. By default Erlang creates as many
+schedulers as there are cores available.
 
 An Erlang {\em node} is an Erlang VM instance which can talk to other nodes.
 Several nodes can be on different machines. Nodes can communicate over TCP, SSL
 and unix pipes (default and most popular is TCP). Processes within a node can
 transparently send messages to other processes (semantics are the same as if
 they were sent from the same node), monitor other nodes or processes.
+
+\section{Erlang evaluation on Tilera64}
+\label{sec:erlang-eval}
+
+\subsection{Related work}
+
+Interest in suitability of software development with Erlang on multi-core
+processors is increasing. For instance, Convey et~al.\cite{erlang-acoustic}
+investigate the relative merits of C++ and Erlang in the implementation of a
+parallel acoustic ray tracing algorithm. Marr et~al.\cite{vm-manycore} analyze
+virtual machine support for many-core architectures including Erlang.
+
+Jianrong \cite{erlang-manycore-scalability} analyzes performance characteristics
+of Erlang virtual machine on Tilera64 processor.
 
 \section{Further topics}
 
@@ -273,6 +289,22 @@ These are left for Erlang part:
     \bibitem{openreplica} Altinbuken,~D., Emin~Gun.,~S. \emph{Commodifying
         Replicated State Machines with OpenReplica}. Computing and
         Information Science Technical Reports, Cornell University.
+
+    \bibitem{erlang-acoustic} Convey,~C., Fredricks,~A., Gagner,~C.,
+        Maxwell,~D., Hamel,~L. \emph{Experience report: erlang in acoustic ray
+        tracing}. In ICFP ’08: Proceeding of the 13th ACM SIGPLAN international
+        conference on Functional programming, pages 115–118, New York, NY, USA,
+        2008. ACM.
+
+    \bibitem{vm-manycore} Marr,~S. D’Hondt,~T. \emph{Many-core virtual machines:
+        decoupling abstract from concrete concurrency}. In SPLASH ’10:
+        Proceedings of the ACM interna- tional conference companion on Object
+        oriented programming systems languages and applications companion.
+        p.~239–240, New York, NY, USA, 2010. ACM.
+
+    \bibitem{erlang-manycore-scalability} Jianrong, Z. \emph{Characterizing the
+        Scalability of Erlang VM on Many-core Processors}. Student thesis, KTH,
+        School of Information and Communication Technology (ICT).
 
 \end{thebibliography}
 \end{document}
