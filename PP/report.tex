@@ -1,16 +1,16 @@
-\documentclass[english,11pt]{article}
+\documentclass[english,11pt]{l4proj}
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
 \usepackage{graphicx}
 \usepackage{geometry}
 \usepackage{caption}
-\usepackage{subcaption}
 \usepackage{babel}
 \usepackage{amsmath}
-\usepackage[nottoc,numbib]{tocbibind}
 \usepackage{verbatim}
 \usepackage{hyperref}
 \newcommand{\fggc}{Fast Genuine Generalized Consensus}
+
+\renewcommand*\thesection{\arabic{section}}
 
 \begin{document}
 
@@ -20,16 +20,8 @@
 \date{1 January 2013}
 
 \maketitle
-\pagebreak
-\tableofcontents
-\pagebreak
 
-\section{Introduction}
-\subsection{Identification}
-
-This document is the report of Year 4 Personal Project.
-
-\subsection{Abstract}
+\begin{abstract}
 
 Current many-core chips look alike to many-node clusters. Many-core systems,
 like many-machine systems, need redundancy in order to be robust.
@@ -40,6 +32,13 @@ many-core chip.
 
 The plan is to implement and test Fast Genuine Generalised Consensus algorithm
 in Erlang on a 64-core machine TILEPro64.
+
+\end{abstract}
+
+\tableofcontents
+\pagebreak
+
+\section{Introduction}
 
 \subsection{Report outline}
 
@@ -559,4 +558,7 @@ all phases of this personal project.
         Volume 2, Issue 2, June 2012, p. 81–90.
 
 \end{thebibliography}
+
+\educationalconsent
+
 \end{document}
