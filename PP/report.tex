@@ -218,22 +218,62 @@ and unix pipes (default and most popular is TCP). Processes within a node can
 transparently send messages to other processes (semantics are the same as if
 they were sent from the same node), monitor other nodes or processes.
 
-\section{About TILE64}
+\section{About TILEPro64}
 \label{sec:tilera}
 
-Overview of Tilera: 64 general-purpose CPUs connected to a switched mesh
-network. Very granular memory control and very high bandwidth and low latency
-message passing between cores.
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\textwidth]{tile64.pdf}
+    \caption{TILEPro64 processor network block diagram}
+    \label{fig:tile64}
+\end{figure}
 
-Like mentioned before, Tilera has very interesting feature which can be
-exploited in message-passing languages: User Dynamic Network, UDN. It is very
-low latency (sending 130B message takes in the order of ticks) and high
-bandwidth (order of tenths of gigabits per second).
+Figure~\ref{fig:tile64} is the block diagram of TILEPro64 processor. It consists
+of a mesh network of 64 {\em tiles} (figure~\ref{fig:tile64}), where each {\em
+tile} houses a general purpose processor, cache, and a non-blocking router,
+which the tile uses to communicate with the other tiles on the processor.
+
+There is high-speed, low-latency packet-switched network between the cores for a
+few purposes. Most interesting are two: shared L3 cache and User Dynamic
+Network, UDN.
+
+\subsection{Shared L3 cache}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\textwidth]{tile64_cpu.pdf}
+    \caption{TILEPro64 single processor diagram}
+    \label{fig:tile64_cpu}
+\end{figure}
+
+Like seen in figure~\ref{fig:tile64_cpu}, every tile has three caches: L1d, L1i
+and L2. L2 cache size is 64KiB. L3 is a "virtual cache" shared between tiles,
+which size is 64KiB * 64 = 4MiB, thus creating 4 MiB of quickly accessible
+memory without going from chip to main memory.
+
+\subsection{User Dynamic Network (UDN)}
+
+Tilera has very interesting feature which can be exploited in message-passing
+languages: User Dynamic Network, UDN. It is very low latency (sending 130B
+message takes in the order of ticks) and high bandwidth (order of tenths of
+gigabits per second) switched inter-core network.
+
+\subsection{One or more Linux instances simultaneously}
+
+It can run multiple Linux SMP instances on different tile configurations (1-64
+cores per Linux instance). In this project we run single Linux SMP instance with
+60 dedicated cores.
 
 \section{Erlang evaluation on Tilera64}
 \label{sec:erlang-eval}
 
 \subsection{Related work}
+
+A very good example of a very robust synchronization between cores
+implementation using message passing is memcached port to Tilera done by
+Facebook. UDN was used for action orchestration and state
+synchornization\cite{facebook-tilera}. That yielded impressive performance
+improvements.
 
 Interest in suitability of software development with Erlang on multi-core
 processors is increasing. For instance, Convey et~al.\cite{erlang-acoustic}
@@ -390,7 +430,7 @@ generalized API.
 -spec propose(fsmref(), [id()], [value()]) -> ok.
 \end{verbatim}
 
-Note: {\tt propose/3} most likely does not make sense.
+Note to Wim: {\tt propose/3} most likely does not make sense.
 
 \section{Conclusion}
 \label{sec:conclusion}
@@ -402,7 +442,8 @@ many-core machines and suggests an API for state machine replication using
 \subsection{Future work}
 
 Implementation of FGGC and performance evaluation on heterogeneous cluster is
-left for future work.
+left for future work. Also using UDN for message passing in Erlang virtual
+machine would also be a very interesting project.
 
 \subsection{Acknowledgement}
 
@@ -471,6 +512,11 @@ all phases of this personal project.
     \bibitem{erlang-manycore-scalability} Jianrong, Z. \emph{Characterizing the
         Scalability of Erlang VM on Many-core Processors}. Student thesis, KTH,
         School of Information and Communication Technology (ICT).
+
+    \bibitem{facebook-tilera} Berezeckia,~M., Frachtenberga,~E. Palecznya,~M.
+        Steeleb,~K. \emph{Power and performance evaluation of Memcached on the
+        TILEPro64 architecture}. Sustainable Computing: Informatics and Systems.
+        Volume 2, Issue 2, June 2012, p. 81–90.
 
 \end{thebibliography}
 \end{document}
