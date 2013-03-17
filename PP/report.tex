@@ -15,12 +15,12 @@
     \label{lst:#1}
     {\small \verbatiminput{#1}}
 }
-\newcommand{\fggc}{Fast Genuine Generalized Consensus\ }
+\newcommand{\fggc}{Fast Genuine Generalized Consensus}
 
 \begin{document}
 
 \title{Personal Project Report\\
-    Implementation and testing the \fggc (FGGC) for Networks-on-Chip}
+    Implementation and testing the \fggc\ (FGGC) for Networks-on-Chip}
 \author{Motiejus Jakštys}
 \date{1 January 2013}
 
@@ -52,7 +52,7 @@ Tilera64 was chosen as development platform, and section~\ref{sec:erlang-eval}
 evaluates Erlang suitability for many-core platforms.
 
 Section~\ref{sec:paxos-api} shows the API and architecture of classic paxos.
-Section~\ref{sec:discussion} presents discussion and the future work.
+Section~\ref{sec:conclusion} presents conclusions and future work.
 
 \section{Changes in many-core platforms}
 \label{sec:many-core}
@@ -136,8 +136,8 @@ approach.}
 Generalized Consensus and Paxos generalizes state-machine approach by reaching
 an agreement on a partially ordered set of commands.
 
-\fggc improves Generalized Paxos in case of collision from six message delays to
-one.
+\fggc\ improves Generalized Paxos in case of collision from six message delays
+to one.
 
 \subsection{Overview of Fast Genuine Generalized Consensus (FGGC)}
 
@@ -312,7 +312,102 @@ need of shared memory at all. Most importantly, application developer would not
 notice the usability change at all; however, this would potentially eliminate
 shared memory bottleneck.
 
-\section{Further topics}
+\section{FGGC in Erlang}
+\label{sec:paxos-api}
+
+Implementation of FGGC should be done in this order:
+
+\begin{enumerate}
+    \item Classic paxos.
+    \item State machine using classic paxos.
+    \item Generalized Paxos.
+    \item GPaxos.
+    \item \fggc.
+\end{enumerate}
+
+\subsection{Clasic Paxos in Erlang}
+
+There are two Classic Paxos implementations in Erlang[one][two], but they are
+written in a way that it will be very difficult to extend the algorithm.
+Therefore Classix Paxos has been reimplemented with this API:
+
+\begin{verbatim}
+-type fsmref() :: reference().
+-type value() :: term().
+-type learner_callback() :: fun((fsmref(), value()) -> ok).
+
+%% @doc Specify learner function per election.
+%% The passed function will be executed when a value is learned.
+-spec init_learner(fsmref(), learner_callback()) -> ok.
+
+%% @doc Executed by application in order to propose a value
+-spec propose(fsmref(), value()) -> ok.
+\end{verbatim}
+
+To propose a value, application calls {\tt propose()}. When the value (same or
+other one) is learned, user's callback {\tt learn()} is called.
+
+{\tt fsmref()} is an \emph{election} and \emph{electorate} identifier. It is
+acquired during the start-up of proposers, acceptors and learners; in this work
+we are not concerned about the start-up of the cluster and how this value is
+generated.
+
+\subsection{State machine replication API using Classic Paxos}
+
+Once Classic Paxos is done, Paxos state machine can be implemented. The API is
+very similar, but {\tt id()} is associated with every election (election id):
+
+\begin{verbatim}
+-type id() :: pos_integer().
+-type learner_callback() :: fun((fsmref(), id(), value()) -> ok).
+
+%% @doc Specify learner function per election.
+%% The passed function will be executed when a value is learned.
+-spec init_learner(fsmref(), learner_callback()) -> ok.
+
+%% @doc Executed by application in order to propose a value
+-spec propose(fsmref(), id(), value()) -> ok.
+\end{verbatim}
+
+With these two functions user is able to implement a replicated state machine.
+However, like observed before, in most systems different commands issued in
+parallel are converging, i.e. can be executed in any order. Here is the
+generalized API.
+
+\subsection{State machine replication API using Generalized Paxos}
+
+\begin{verbatim}
+-type id() :: pos_integer().
+-type command() :: term().
+
+-type learner_callback() :: fun((fsmref(), id(), value()) -> ok).
+-type commands_commute() :: fun((command(), command()) -> boolean()).
+
+%% @doc Specify learner function and command comparison fun per election.
+-spec init_learner(fsmref(), learner_callback(), compare_commands()) -> ok.
+
+%% @doc Executed by application in order to propose a value
+-spec propose(fsmref(), [id()], [value()]) -> ok.
+\end{verbatim}
+
+Note: {\tt propose/3} most likely does not make sense.
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+This paper presents the suitability of Erlang for algorithm implementation on
+many-core machines and suggests an API for state machine replication using
+\fggc.
+
+\subsection{Future work}
+
+Implementation of FGGC and performance evaluation on heterogeneous cluster is
+left for future work.
+
+\subsection{Acknowledgement}
+
+The author thanks Wim Vanderbauwhede for his comments and continuous support in
+all phases of this personal project.
 
 \clearpage
 \begin{thebibliography}{99}
