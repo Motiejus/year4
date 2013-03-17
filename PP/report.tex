@@ -10,11 +10,6 @@
 \usepackage[nottoc,numbib]{tocbibind}
 \usepackage{verbatim}
 \usepackage{hyperref}
-\newcommand{\listing}[1]{
-    \subsubsection{#1}
-    \label{lst:#1}
-    {\small \verbatiminput{#1}}
-}
 \newcommand{\fggc}{Fast Genuine Generalized Consensus}
 
 \begin{document}
@@ -44,12 +39,16 @@ application of distributed synchronization, state machine replication, on a
 many-core chip.
 
 The plan is to implement and test Fast Genuine Generalised Consensus algorithm
-in Erlang on TILE64, a 64-core chip. Section~\ref{sec:many-core} presents how
-computing in many-core systems changed recently. Section~\ref{sec:paxos-family}
-presents what consensus algorithms are. Section~\ref{sec:erlang-why} explains
-why Erlang was chosen for this application, section~\ref{sec:tilera} shows why
-Tilera64 was chosen as development platform, and section~\ref{sec:erlang-eval}
-evaluates Erlang suitability for many-core platforms.
+in Erlang on a 64-core machine TILEPro64.
+
+\subsection{Report outline}
+
+Section~\ref{sec:many-core} presents how computing in many-core systems changed
+recently. Section~\ref{sec:paxos-family} presents what consensus algorithms
+are. Section~\ref{sec:erlang-why} explains why Erlang was chosen for this
+application, section~\ref{sec:tilera} shows why Tilera64 was chosen as
+development platform, and section~\ref{sec:erlang-eval} evaluates Erlang
+suitability for many-core platforms.
 
 Section~\ref{sec:paxos-api} shows the API and architecture of classic paxos.
 Section~\ref{sec:conclusion} presents conclusions and future work.
@@ -81,8 +80,9 @@ From functional perspective, this kind of many-core system in many aspects
 resembles a many-node cluster. Machines (tiles) communicate with each other by
 sending messages; machines (tiles) can fail; they have to synchronize their
 actions (think about locks and mutexes, which are much more complicated without
-having shared memory). Since message-passing distributed systems come into play,
-it is important to investigate consensus algorithms in many-core systems.
+having shared memory). Since message-passing based many-core chips are coming to
+the stage, it is important to investigate consensus algorithms in many-core
+systems.
 
 \section{Consensus and Paxos family overview}
 \label{sec:paxos-family}
@@ -93,30 +93,36 @@ by a majority of acceptors. It works as follows: a set of proposers propose a
 value, and the algorithm guarantees that only one value will be chosen by a
 majority of acceptors. In worse case no value will be chosen.
 
-The most popular application is distributed state machine implementation: a
+%There is one family of algorithms that achieve this, the Paxos family.
+%Classical Paxos (the first version of Paxos) was first published by Leslie
+%Lamport in 1998\cite{classic-paxos}. Since then many variations of the algorithm
+%emerged\footnote{Just a little bit of
+%    \href{http://scholar.google.com/scholar?q=paxos}{searching} will give dozens
+%    of algorithms that have a word "Paxos" in it.}.
+
+The most popular application is distributed state machine implementation
+\footnote{\url{http://en.wikipedia.org/wiki/Paxos\_(computer\_science)}}. A
 majority of cluster nodes can use this algorithm to agree on an order in which
 to execute a series of commands. A classical example for this is database
 transaction synchronization across many database nodes, which have local copies
 of data. State machine replication is built on the primitive of choosing a
 single value.
 
-There is one family of algorithms that achieve this, the Paxos family.
-Classical Paxos (the first version of Paxos) was first described by Leslie
-Lamport in 1998\cite{classic-paxos}, but gained attraction only at
-2001\cite{paxos-simple}. As we can see, it is a fairly recent topic. From then
-many variations of the algorithm emerged.
-
 Paxos algorithms are used primarily for synchronizing distributed systems. A few
 notable examples: Google uses Paxos in their distributed locking service
 Chubby\cite{chubby} (which is an important building block of BigTable). Another
-example is OpenReplica\cite{openreplica}, where Paxos is used for replicated
-state machine implementation.
+example is OpenReplica\cite{openreplica}, where Paxos is used to implement a
+replicated state machine.
 
-Classical way to implement a replicated state machine is very nicely explained
-in\cite{paxos-simple}: \emph{To guarantee that all servers execute the same
-    sequence of state machine commands, we implement a sequence of separate
-    instances of the Paxos consensus algorithm, the value chosen by the $i^{th}$
-instance being the $i^{th}$ state machine command in the sequence.}
+\cite{paxos-simple} explains the classical way to implement a replicated state
+machine:
+
+\begin{quote}
+To guarantee that all servers execute the same sequence of state machine
+commands, we implement a sequence of separate instances of the Paxos consensus
+algorithm, the value chosen by the $i^{th}$ instance being the $i^{th}$ state
+machine command in the sequence.
+\end{quote}
 
 While this is simple and reliable, sometimes is inefficient. Two commands issued
 in parallel can \emph{interfere} or \emph{commute}. \emph{Commute} means the
@@ -128,21 +134,23 @@ different accounts. However, \emph{deposit} and \emph{withdrawal} of the same
 account must be executed in the same order as they can produce different
 outcomes (negative balance) if executed in different orders.
 
-\emph{In many systems, concurrently issued commands almost always commute. An
-    implementation that saves a message delay in almost all cases can be
-    significantly more efficient than one using the conventional state-machine
-approach.}
+In many systems, concurrently issued commands almost always commute. An
+implementation that saves a message delay in almost all cases can be
+significantly more efficient than one using the conventional state-machine
+approach\cite{generalized-consensus}. For that reasons generalized consensus is
+important.
 
-Generalized Consensus and Paxos generalizes state-machine approach by reaching
+Generalized Consensus and Paxos generalizes state-machine replication by reaching
 an agreement on a partially ordered set of commands.
 
-\fggc\ improves Generalized Paxos in case of collision from six message delays
-to one.
+\fggc\ improves Generalized Consensus and Paxos in case of collision from six
+message delays to one.
 
 \subsection{Overview of Fast Genuine Generalized Consensus (FGGC)}
 
 From abstract\cite{fggc}:
 
+\begin{quote}
 Consensus is a central primitive for building replicated systems, but its
 latency constitutes a bottleneck. A well-known solution to consensus is Fast
 Paxos. In a recent paper, Lamport enhances Fast Paxos by leveraging the
@@ -150,7 +158,13 @@ commutativity of concurrent commands. The new primitive, called Generalized
 Paxos, reduces the collision rate, and thus the latency of Fast Paxos. However
 if a collision occurs, the latency of Generalized Paxos equals six communication
 steps, which is higher than Fast Paxos. This paper presents FGGC, a novel
-consensus algorithm that reduces recovery delay when a collision occurs to one.
+consensus algorithm that reduces recovery delay when a collision occurs to
+one.
+\end{quote}
+
+We want to implement FGGC, because it is the most flexible version to implement
+a realistic state machine in Paxos, and is the fastest (least message delays)
+generalized version that we are aware of as of time of the work.
 
 \subsection{Language Choice}
 \label{sec:erlang-why}
@@ -160,10 +174,9 @@ The language decision was based on these factors:
     \item It can run on Tilera64.
     \item How well is it suitable for parallel algorithm implementation.
     \item Performance.
-    \item Memory footprint.
 \end{enumerate}
 
-Initially Haskell was chosen for the algorithm implementation, for a few
+Initially Haskell was chosen for the algorithm implementation, for the following
 reasons. It is very convenient to program state machines in a functional
 language; it compiles to machine code, which makes it a good candidate for
 performance. Furthermore, llvm compiler looked like a promising sign for
@@ -190,15 +203,17 @@ it on a host node like on a remote node.
 
 The most appealing feature of Erlang is its approach to concurrency. Erlang {\em
 actors} and message passing are higher-level synchronization primitives than
-mutexes and condition variables. Erlang system can spawn millions of processes,
-and does a very good job in parallelizing their work.
+mutexes and condition variables. User can spawn millions of processes in Erlang
+VM and Erlang will do a very good job in parallelizing their work with extremely
+low context-switching and message passing overhead.
 
-Erlang is written in C and requires very standard tools to (cross-)compile and
+Erlang is written in C and requires standard UNIX tools to (cross-)compile and
 run it. Supported platforms includes any Unix system, vxworks, Linux and
-Windows. Older version of Erlang (R13B) has been cross-compiled and ran on
-Tilera Multi-core Development Environment (MDE) version 2. Some patches to the
-build system were necessary to compile newer version of Erlang (R15B02) on the
-version 3 of Tilera MDE. They have been submitted upstream.
+Windows\footnote{\url{http://www.erlang.org/doc/installation\_guide/INSTALL.html}}.
+Older version of Erlang (R13B) has been cross-compiled and ran on Tilera
+Multi-core Development Environment (MDE) version 2. Some patches to the build
+system were necessary to compile newer version of Erlang (R15B02) on the version
+3 of Tilera MDE. They have been submitted upstream.
 
 \subsection{About Erlang Run Time System (ERTS)}
 
@@ -210,7 +225,8 @@ processes are light-weight (grow and shrink dynamically) with small memory
 footprint, fast to create and terminate and the scheduling overhead is low.
 These are scheduled by Erlang run-time system. {\em Scheduler} is an OS thread
 which schedules the Erlang processes. By default Erlang creates as many
-schedulers as there are cores available.
+schedulers as there are cores available. On Linux Erlang uses information about
+CPU topology to exploit data locality.
 
 An Erlang {\em node} is an Erlang VM instance which can talk to other nodes.
 Several nodes can be on different machines. Nodes can communicate over TCP, SSL
@@ -229,9 +245,9 @@ they were sent from the same node), monitor other nodes or processes.
 \end{figure}
 
 Figure~\ref{fig:tile64} is the block diagram of TILEPro64 processor. It consists
-of a mesh network of 64 {\em tiles} (figure~\ref{fig:tile64}), where each {\em
-tile} houses a general purpose processor, cache, and a non-blocking router,
-which the tile uses to communicate with the other tiles on the processor.
+of a mesh network of 64 {\em tiles}, where each {\em tile} houses a general
+purpose processor, cache, and a non-blocking router, which the tile uses to
+communicate with the other tiles on the processor.
 
 There is high-speed, low-latency packet-switched network between the cores for a
 few purposes. Most interesting are two: shared L3 cache and User Dynamic
@@ -246,34 +262,36 @@ Network, UDN.
     \label{fig:tile64_cpu}
 \end{figure}
 
-Like seen in figure~\ref{fig:tile64_cpu}, every tile has three caches: L1d, L1i
+Like seen in figure~\ref{fig:tile64_cpu}, every tile has three caches: L1D, L1I
 and L2. L2 cache size is 64KiB. L3 is a "virtual cache" shared between tiles,
 which size is 64KiB * 64 = 4MiB, thus creating 4 MiB of quickly accessible
-memory without going from chip to main memory.
+on-chip cache.
 
 \subsection{User Dynamic Network (UDN)}
 
-Tilera has very interesting feature which can be exploited in message-passing
-languages: User Dynamic Network, UDN. It is very low latency (sending 130B
-message takes in the order of ticks) and high bandwidth (order of tenths of
-gigabits per second) switched inter-core network.
+Tilera has very interesting feature: User Dynamic Network, UDN. It is very low
+latency (sending 130B message takes in the order of ticks) and high bandwidth
+(order of tens of gigabits per second) switched inter-core network.
+
+It can be very interestingly exploited in message-passing systems for
+low-latency communication. Example of successful usage of this network is
+presented in section~\ref{sec:future-work}.
 
 \subsection{One or more Linux instances simultaneously}
 
-It can run multiple Linux SMP instances on different tile configurations (1-64
-cores per Linux instance). In this project we run single Linux SMP instance with
-60 dedicated cores.
+TILEPro64 can run multiple Linux SMP instances on different tile configurations
+(1-64 cores per Linux instance). In this project we run single Linux SMP
+instance with 62 dedicated cores.
 
 \section{Erlang evaluation on Tilera64}
 \label{sec:erlang-eval}
 
 \subsection{Related work}
 
-A very good example of a very robust synchronization between cores
-implementation using message passing is memcached port to Tilera done by
-Facebook. UDN was used for action orchestration and state
-synchornization\cite{facebook-tilera}. That yielded impressive performance
-improvements.
+A good example of a very robust synchronization between cores implementation
+using message passing is memcached port to Tilera done by Facebook. UDN was used
+for action orchestration and state synchornization\cite{facebook-tilera}. That
+yielded impressive performance compared to standard architecture servers.
 
 Interest in suitability of software development with Erlang on multi-core
 processors is increasing. For instance, Convey et~al.\cite{erlang-acoustic}
@@ -288,12 +306,27 @@ synchronization with each other). It achieved speedups of 30-40 by using 64
 cores.
 
 Project UPMARC\footnote{\url{http://www.it.uu.se/research/upmarc}} creates tools
-that improve testing of many-core systems development with a focus on
-Erlang/OTP.
+that improve testing of many-core systems development. Number of them are
+implemented in/for
+Erlang/OTP
+\footnote{\url{http://www.it.uu.se/research/upmarc/publications/researchers}}.
 
-Release-project\footnote{\url{http://www.release-project.eu/}} is an EU funded
-project which focuses on many-core programming performance, which includes
-improving Erlang VM[make up a reference].
+\begin{quote}
+UPMARC's goal is to develop the insights that enable new tools and approaches to
+make parallel programming easier, and to demonstrate their effectiveness through
+prototype implementations on real problems.
+\end{quote}
+
+\begin{quote}
+RELEASE\footnote{\url{http://www.release-project.eu/}} is an EU FP7 STREP
+(287510) project that aims to scale the radical concurrency-oriented programming
+paradigm to build reliable general-purpose software, such as server-based
+systems, on massively parallel machines. The trend-setting language we will use
+is Erlang/OTP which has concurrency and robustness designed in. Currently
+Erlang/OTP has inherently scalable computation and reliability models, but in
+practice scalability is constrained by aspects of the language and virtual
+machine. Moreover existing profiling and debugging tools don't scale.
+\end{quote}
 
 \subsection{Erlang performance on TILE64 out of the box}
 
@@ -330,9 +363,9 @@ Worker(L):                % note that worker receives L on startup
                           % At this point process dies
 \end{verbatim}
 
-We would expect this program to scale linearly while increasing number of
-cores. However, logarithmic speedup is observed with a cap of ~12, like shown
-in figure~\ref{fig:parallel_speedup}.
+We would expect this program to scale linearly while increasing number of cores.
+However, logarithmic speedup is observed with a cap of ~12, like observed from
+figure~\ref{fig:parallel_speedup}.
 
 \begin{figure}
     \centering
@@ -349,8 +382,8 @@ Currently in Erlang message sending between processes is implemented using
 shared memory, locks and mutexes. However, it would be a very interesting
 project to replace inter-erlang-process communication with UDN eliminating the
 need of shared memory at all. Most importantly, application developer would not
-notice the usability change at all; however, this would potentially eliminate
-shared memory bottleneck.
+notice the usability change; however, this would potentially eliminate shared
+memory bottleneck.
 
 \section{FGGC in Erlang}
 \label{sec:paxos-api}
@@ -365,11 +398,16 @@ Implementation of FGGC should be done in this order:
     \item \fggc.
 \end{enumerate}
 
+Every step is a pre-requisite for the next one. There are three Classic Paxos
+implementations in Erlang \footnote{\url{https://github.com/gburd/gen\_paxos}}
+\footnote{\url{http://libpaxos.sourceforge.net/paxos\_projects.php\#erlangpaxos}}
+\footnote{\url{http://code.google.com/p/scalaris/}}, but they are written in a
+way that it will be very difficult to extend the algorithm. Therefore classic
+paxos has been reimplemented.
+
 \subsection{Clasic Paxos in Erlang}
 
-There are two Classic Paxos implementations in Erlang[one][two], but they are
-written in a way that it will be very difficult to extend the algorithm.
-Therefore Classix Paxos has been reimplemented with this API:
+Here is the API of classic paxos:
 
 \begin{verbatim}
 -type fsmref() :: reference().
@@ -411,8 +449,9 @@ very similar, but {\tt id()} is associated with every election (election id):
 
 With these two functions user is able to implement a replicated state machine.
 However, like observed before, in most systems different commands issued in
-parallel are converging, i.e. can be executed in any order. Here is the
-generalized API.
+parallel are converging, i.e. can be executed in any order.
+
+To overcome this inefficiency, we present the generalized API.
 
 \subsection{State machine replication API using Generalized Paxos}
 
@@ -430,7 +469,7 @@ generalized API.
 -spec propose(fsmref(), [id()], [value()]) -> ok.
 \end{verbatim}
 
-Note to Wim: {\tt propose/3} most likely does not make sense.
+Note to Wim: {\tt propose/3} API most likely does not make sense.
 
 \section{Conclusion}
 \label{sec:conclusion}
@@ -440,6 +479,7 @@ many-core machines and suggests an API for state machine replication using
 \fggc.
 
 \subsection{Future work}
+\label{sec:future-work}
 
 Implementation of FGGC and performance evaluation on heterogeneous cluster is
 left for future work. Also using UDN for message passing in Erlang virtual
