@@ -7,5 +7,5 @@ set grid
 
 set xlabel "Number of cores"
 set ylabel "Speedup"
-plot "./1-4-64_speedup.txt" with linespoints title "Real speedup", \
+plot "./1-4-56_speedup.txt" with linespoints title "Real speedup", \
 x title "Maximum theoretical speedup";

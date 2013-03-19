@@ -10,4 +10,4 @@ set nobox
 set xlabel "Number of cores"
 set ylabel "Slowdown"
 
-plot "./1-4-64_speedup.txt" using 1:($2/$1) with linespoints title "";
+plot "./1-4-56_speedup.txt" using 1:($2/$1) with linespoints title "";

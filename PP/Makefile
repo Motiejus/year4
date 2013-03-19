@@ -13,10 +13,10 @@ report.pdf: report.toc report.tex images/slowdown.pdf images/speedup.pdf
 presentation.pdf: presentation.tex images/slowdown.pdf images/speedup.pdf
 	$(call pdflatex,presentation,"No file")
 
-images/slowdown.pdf: slowdown.gp 1-4-64_speedup.txt
+images/slowdown.pdf: slowdown.gp 1-4-56_speedup.txt
 	gnuplot < $<
 
-images/speedup.pdf: speedup.gp 1-4-64_speedup.txt
+images/speedup.pdf: speedup.gp 1-4-56_speedup.txt
 	gnuplot < $<
 
 clean:
