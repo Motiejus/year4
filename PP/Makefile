@@ -2,7 +2,7 @@
 
 all: report.pdf presentation.pdf
 
-pdflatex=while (pdflatex $1; grep -q "$2" $1.log) do true; done
+pdflatex=while (pdflatex $1; grep -q \"$2\" $1.log) do true; done
 
 report.toc: report.tex
 	$(call pdflatex,report,"Rerun to")
