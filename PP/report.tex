@@ -65,9 +65,67 @@ systems, and servers with 24 cores are more and more widely deployed.
 In order to go further improving the performance, increasing the frequency does
 not pay off; other approach is needed. According to inverse Pollack's
 rule\cite{pollack}, highest computational bandwidth will be achieved by
-parallelizing the work on many small cores\cite{1kcorechips}. This is where the
-future of microprocessors is heading to: having more less powerful cores to do
-the work\cite{future-microprocessors}.
+parallelizing the work on many small cores\cite{1kcorechips}.
+
+Borkar et. al. goes into more detail about this.
+
+\begin{quote}
+
+    To explore this concept further, consider three systems on a chip
+    comprising 1: 12 large (60MT) cores, 2: 48 medium (15MT) cores, and 3: 144
+    small (5MT) cores, all of them with the same amount of total cache, and all
+    of them in the same power envelope. Figure~\ref{fig:core_size_performance}
+    compares their relative performance.
+
+    Small core is 12 times smaller than the large core, but its performance is
+    only about a third of the large core. Total throughput of the small core
+    system (TPT), however, is much higher than the large core system. If you
+    parallelize one application for a 12 large core system and a 144 small core
+    system then the small core system performs poorly, as expected from Amdahl’s
+    Law\cite{amdahls-law}. Notice that as the number of applications increase,
+    total system performance of medium and small core systems increase.
+    Therefore, to harvest the performance of a many-core system, we cannot just
+    depend on parallelizing a single application, but must utilize task level
+    and application level parallelism.
+
+\end{quote}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.5\textwidth]{images/relative_core_performance.png}
+    \caption{Performance of Large, Medium and Small Cores}
+    \label{fig:core_size_performance}
+\end{figure}
+
+However, application performance suffers from its serial factor, which is
+formally described by Amdalh's law:
+
+$$
+\text{Parallel speedup} =
+\frac{1}{\text{Serial \%} + (1 - \text{Serial \%}) / N}
+$$
+
+If serial percentage is large, then parallel speedup saturates with small number
+of cores. Figure~\ref{fig:serial_speedup} illustrates the impact of serial
+percentage of code on parallel speedup.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.5\textwidth]{images/serial_speedup.png}
+    \caption{Amdahl's Law limits parallel speedup}
+    \label{fig:serial_speedup}
+\end{figure}
+
+The conclusions are that it is very important to reduce serial part of the
+program. In practice, it is complicated to get it right. We will come back to
+this further in the report.
+
+To sum up, this is where the future of microprocessors is heading to: having
+more less powerful cores to do the work\cite{future-microprocessors}, and
+programming languages and tools are developed to make parallel programming
+easier, i.e. to reduce the serial component.
+
+\subsection{Inter-core communication}
 
 In current systems data exchange between cores is handled via shared memory,
 while maintaining the coherency of the CPUs caches. Conversely, Tilera employed
@@ -139,8 +197,8 @@ significantly more efficient than one using the conventional state-machine
 approach\cite{generalized-consensus}. For that reasons generalized consensus is
 important.
 
-Generalized Consensus and Paxos generalizes state-machine replication by reaching
-an agreement on a partially ordered set of commands.
+Generalized Consensus and Paxos generalizes state-machine replication by
+reaching an agreement on a partially ordered set of commands.
 
 \fggc\ improves Generalized Consensus and Paxos in case of collision from six
 message delays to one.
@@ -208,11 +266,12 @@ low context-switching and message passing overhead.
 
 Erlang is written in C and requires standard UNIX tools to (cross-)compile and
 run it. Supported platforms includes any Unix system, vxworks, Linux and
-Windows\footnote{\url{http://www.erlang.org/doc/installation\_guide/INSTALL.html}}.
+Windows
+\footnote{\url{http://www.erlang.org/doc/installation\_guide/INSTALL.html}}.
 Older version of Erlang (R13B) has been cross-compiled and ran on Tilera
 Multi-core Development Environment (MDE) version 2. Some patches to the build
-system were necessary to compile newer version of Erlang (R15B02) on the version
-3 of Tilera MDE. They have been submitted upstream.
+system were necessary to compile newer version of Erlang (R15B02) on the
+version 3 of Tilera MDE. They have been submitted upstream.
 
 \subsection{About Erlang Run Time System (ERTS)}
 
@@ -556,6 +615,10 @@ all phases of this personal project.
         Steeleb,~K. \emph{Power and performance evaluation of Memcached on the
         TILEPro64 architecture}. Sustainable Computing: Informatics and Systems.
         Volume 2, Issue 2, June 2012, p. 81–90.
+
+    \bibitem{amdahls-law} Hill,~Mark~D. \emph{Amdahl's Law in the Multicore
+        Era}. Dept. of Comput. Sci., Univ. of Wisconsin-Madison, Madison, WI
+        Marty, Michael R.  Vol.~41, Issue~7. p.~33-38.
 
 \end{thebibliography}
 
