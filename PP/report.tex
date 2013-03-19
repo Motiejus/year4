@@ -92,7 +92,7 @@ Borkar et. al. goes into more detail about this.
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.5\textwidth]{images/relative_core_performance.png}
+    \includegraphics[width=0.5\textwidth]{images/pollack.png}
     \caption{Performance of Large, Medium and Small Cores}
     \label{fig:core_size_performance}
 \end{figure}
@@ -106,14 +106,14 @@ $$
 $$
 
 If serial percentage is large, then parallel speedup saturates with small number
-of cores. Figure~\ref{fig:serial_speedup} illustrates the impact of serial
+of cores. Figure~\ref{fig:amdahl} illustrates the impact of serial
 percentage of code on parallel speedup.
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.5\textwidth]{images/serial_speedup.png}
+    \includegraphics[width=0.5\textwidth]{images/amdahl.png}
     \caption{Amdahl's Law limits parallel speedup}
-    \label{fig:serial_speedup}
+    \label{fig:amdahl}
 \end{figure}
 
 The conclusions are that it is very important to reduce serial part of the
