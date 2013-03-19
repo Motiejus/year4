@@ -422,26 +422,36 @@ Worker(L):                % note that worker receives L on startup
 \end{verbatim}
 
 We would expect this program to scale linearly while increasing number of cores.
-However, logarithmic speedup is observed with a cap of ~12, like observed from
+In TILEPro64 speedup cap is around 37, like observed from
 figure~\ref{fig:parallel_speedup}.
 
 \begin{figure}
     \centering
-    \includegraphics[width=0.9\textwidth]{images/parallel_speedup.pdf}
-    \caption{Speedup of embarrasingly parallel program (5 runs)}
+    \includegraphics[width=0.9\textwidth]{images/speedup.pdf}
+    \caption{Speedup of embarrasingly parallel program}
     \label{fig:parallel_speedup}
 \end{figure}
 
-This experimental data shows that Erlang can be used for many-core programs,
-but, like we see from work by Jianrong\cite{erlang-manycore-scalability}, VM
-needs tuning in order to achieve significant linear scalability.
+\begin{figure}
+    \centering
+    \includegraphics[width=0.9\textwidth]{images/slowdown.pdf}
+    \caption{Slowdown of the same program}
+    \label{fig:parallel_slowdown}
+\end{figure}
+
+Figure~\ref{fig:parallel_slowdown} is derived from~\ref{fig:parallel_speedupp}
+and shows precisely the loss of speedup while increasing the number of cores.
+
+This experimental data shows that Erlang scales pretty well with increasing
+number of cores. More details about it can be found in work by
+Jianrong\cite{erlang-manycore-scalability}.
 
 Currently in Erlang message sending between processes is implemented using
 shared memory, locks and mutexes. However, it would be a very interesting
 project to replace inter-erlang-process communication with UDN eliminating the
 need of shared memory at all. Most importantly, application developer would not
-notice the usability change; however, this would potentially eliminate shared
-memory bottleneck.
+notice the usability change; however, this would potentially eliminate a lot of
+bottle-neck during message passing which incurs by going out of chip.
 
 \section{FGGC in Erlang}
 \label{sec:paxos-api}
