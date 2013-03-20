@@ -30,5 +30,5 @@ clean:
 	rm -f *.pyc
 	rm -f report.aux report.log report.pdf report.toc report.out
 	rm -f images/speedup.pdf images/slowdown.pdf
-	rm -f presentation.aux presentation.log presentation.pdf \
+	rm -f presentation.aux presentation.log presentation.pdf presentation.vrb \
 		presentation.toc presentation.out presentation.snm presentation.nav
