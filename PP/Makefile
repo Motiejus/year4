@@ -4,15 +4,20 @@ all: report.pdf presentation.pdf
 
 pdflatex=while (pdflatex $1; grep -q \"$2\" $1.log) do true; done
 
+GENIMGS = images/speedup.pdf images/slowdown.pdf
+
 PIMGS = $(wildcard images/*.png)
 
-report.toc: report.tex
+report.toc: report.tex $(GENIMGS)
 	$(call pdflatex,report,"Rerun to")
 
-report.pdf: report.toc report.tex images/slowdown.pdf images/speedup.pdf
+report.pdf: report.toc report.tex $(GENIMGS)
 	$(call pdflatex,report,"Rerun to")
 
-presentation.pdf: presentation.tex images/speedup.pdf images/slowdown.pdf
+presentation.toc: presentation.tex $(GENIMGS)
+	$(call pdflatex,presentation,"No file")
+
+presentation.pdf: presentation.toc presentation.tex $(GENIMGS)
 	$(call pdflatex,presentation,"No file")
 
 images/slowdown.pdf: slowdown.gp 1-4-56_speedup.txt
