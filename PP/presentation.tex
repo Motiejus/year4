@@ -3,6 +3,8 @@
 \setbeamertemplate{navigation symbols}{}
 \usepackage{graphics}
 \usepackage{array}
+\usepackage{verbatim}
+\usepackage{hyperref}
 
 \title{Paxos on (a) many-core platform(s)}
 \author{Motiejus Jak\v{s}tys \\
@@ -18,13 +20,11 @@
 
 \begin{frame}
     \frametitle{Table of Contents}
-    \tableofcontents[currentsection]
+    \tableofcontents
     Interrupt any time.
 \end{frame}
 
 \section{Changes in many-core platforms}
-
-\subsection{Laws}
 
 \begin{frame}{Laws}
     \begin{tabular}{cm{0cm}}
@@ -131,6 +131,8 @@
     Changed algorithm implementation.
 \end{frame}
 
+\section{Benchmarks}
+
 \begin{frame}{Bad embarrassingly parallel Benchmarks}
     \pause
         \includegraphics[width=\textwidth]{images/bad_speedup.pdf}
@@ -142,6 +144,52 @@
 
 \begin{frame}{Good embarrassingly parallel Benchmarks}
     \includegraphics[width=\textwidth]{images/slowdown.pdf}
+\end{frame}
+
+\begin{frame}[fragile]{Implemented Classic Paxos\footnote{
+    \url{https://github.com/Motiejus/epaxos}}}
+
+        \fontsize{11pt}{14}\selectfont \begin{verbatim}
+-type fsmref() :: reference().
+-type value() :: term().
+-type learner_callback() :: fun((value()) -> ok).
+
+%% Specify learner function per election.
+%% Function will be executed when a value is learned.
+-spec init_learner(fsmref(), learner_callback()) -> ok.
+
+%% Executed by application.
+-spec propose(fsmref(), value()) -> ok.
+    \end{verbatim}
+\end{frame}
+
+\section{Summary \& future work}
+
+\begin{frame}{Year 4}
+    \begin{tabular}{|l|l|}
+        \hline
+        TILEPro64 dev env & 2 weeks \\ \hline
+    Haskell investigation & 4 weeks \\ \hline
+  Port Erlang to TileMDE3 & 1 hour \\ \hline
+              Make it run & 3 weeks \\ \hline
+   Try to understand FGGC & 4 weeks \\ \hline
+          Implement Paxos & 1 week \\ \hline
+                   Report & 2 weeks \\ \hline \hline
+               \bf{TOTAL} & \bf{16 weeks} \\ \hline
+    \end{tabular}
+\end{frame}
+
+\begin{frame}{Future work}
+    \pause
+    Erlang message passing via UDN
+    \pause
+
+    \vskip.7cm
+    Paxos at work!
+
+    \begin{center}
+        \includegraphics[height=.5\textheight]{images/spilgames.png}
+    \end{center}
 \end{frame}
 
 \end{document}

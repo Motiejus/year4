@@ -480,7 +480,7 @@ Here is the API of classic paxos:
 \begin{verbatim}
 -type fsmref() :: reference().
 -type value() :: term().
--type learner_callback() :: fun((fsmref(), value()) -> ok).
+-type learner_callback() :: fun((value()) -> ok).
 
 %% @doc Specify learner function per election.
 %% The passed function will be executed when a value is learned.
