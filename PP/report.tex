@@ -51,7 +51,7 @@ application, section~\ref{sec:tilera} shows why Tilera64 was chosen as
 development platform, and section~\ref{sec:erlang-eval} evaluates Erlang
 suitability for many-core platforms.
 
-Section~\ref{sec:paxos-api} shows the API and architecture of classic paxos.
+Section~\ref{sec:paxos-api} shows the API and architecture of classic Paxos.
 Section~\ref{sec:conclusion} presents conclusions and future work.
 
 \section{Changes in many-core platforms}
@@ -95,7 +95,8 @@ Borkar et. al. goes into more detail about this.
 \begin{figure}[h]
     \centering
     \includegraphics[width=0.5\textwidth]{images/pollack.png}
-    \caption{Performance of Large, Medium and Small Cores}
+    \caption{Performance of Large, Medium and Small
+    Cores\cite{future-microprocessors}}
     \label{fig:core_size_performance}
 \end{figure}
 
@@ -114,7 +115,7 @@ percentage of code on parallel speedup.
 \begin{figure}[h]
     \centering
     \includegraphics[width=0.5\textwidth]{images/amdahl.png}
-    \caption{Amdahl's Law limits parallel speedup}
+    \caption{Amdahl's Law limits parallel speedup\cite{future-microprocessors}}
     \label{fig:amdahl}
 \end{figure}
 
@@ -293,7 +294,7 @@ they were sent from the same node), monitor other nodes or processes.
 \begin{figure}
     \centering
     \includegraphics[width=0.5\textwidth]{images/tile64.pdf}
-    \caption{TILEPro64 processor network block diagram}
+    \caption{TILEPro64 processor network block diagram\cite{tilepro64-diagram}}
     \label{fig:tile64}
 \end{figure}
 
@@ -308,10 +309,10 @@ Network, UDN.
 
 \subsection{Shared L3 cache}
 
-\begin{figure}
+\begin{figure}[htb]
     \centering
     \includegraphics[width=0.5\textwidth]{images/tile64_cpu.pdf}
-    \caption{TILEPro64 single processor diagram}
+    \caption{TILEPro64 single processor diagram\cite{tilepro64-diagram}}
     \label{fig:tile64_cpu}
 \end{figure}
 
@@ -681,6 +682,8 @@ all phases of this personal project.
     \bibitem{lundin-smp} Lundin,~K. \emph{About Erlang/OTP and Multi-core
         performance in particular}. Talk at Erlang Factory London June 26 2009.
 
+    \bibitem{tilepro64-diagram} Agarwal,~A. \emph{Proceedings of HPEC Workshop,
+    2007}
 
 \end{thebibliography}
 
