@@ -6,7 +6,7 @@
 \usepackage{verbatim}
 \usepackage{hyperref}
 
-\title{Paxos on (a) many-core platform(s)}
+\title{Paxos on a many-core platforms}
 \author{Motiejus Jak\v{s}tys \\
 1003704j}
 
@@ -21,10 +21,11 @@
 \begin{frame}
     \frametitle{Table of Contents}
     \tableofcontents
+    \hfill
     Interrupt any time.
 \end{frame}
 
-\section{Changes in many-core platforms}
+\section{Many-core platform programming trends}
 
 \begin{frame}{Laws}
     \pause
@@ -46,10 +47,7 @@
             \pause
         \item \alert{Increase parallelism}
     \end{itemize}
-    \includegraphics[height=0.2\textheight]{images/orly.jpg}
 \end{frame}
-
-\section{Trends}
 
 \begin{frame}{Tilera}
     \pause
@@ -78,8 +76,8 @@
 
 \begin{frame}{Recap}
     \begin{itemize}
-        \item Reduce serial component
-        \item Parallelization is complex to program (elaborate!)
+        \item Reduce serial component.
+        \item Parallelization is complex to program.
             \pause
         \item Need redundancy to be robust
     \end{itemize}
@@ -112,7 +110,7 @@
     \pause
     \vspace{1cm}
 
-    But ... (demonstration)
+    But ...
 \end{frame}
 
 \begin{frame}{Erlang}
@@ -122,6 +120,7 @@
             \item<1> Provides what Cloud Haskell tried to!
             \item<1> Message passing
             \item<1> Concurrent, distributed
+            \item<1> Implemented in C89
             \item Loosely typed
         \end{itemize}
         \column{.19\textwidth}
@@ -129,7 +128,7 @@
     \end{columns}
     \pause
     \vspace{2cm}
-    Changed algorithm implementation.
+    Impact algorithm implementation.
 \end{frame}
 
 \section{Benchmarks}
@@ -169,14 +168,15 @@
 \begin{frame}{Year 4}
     \begin{tabular}{|l|l|}
         \hline
-        TILEPro64 dev env & 2 weeks \\ \hline
+        TILEPro64 dev env & 4 weeks \\ \hline
     Haskell investigation & 4 weeks \\ \hline
   Port Erlang to TileMDE3 & 1 hour \\ \hline
               Make it run & 3 weeks \\ \hline
+        Erlang Benchmarks & 2 weeks \\ \hline
    Try to understand FGGC & 4 weeks \\ \hline
           Implement Paxos & 1 week \\ \hline
                    Report & 2 weeks \\ \hline \hline
-               \bf{TOTAL} & \bf{16 weeks} \\ \hline
+               \bf{TOTAL} & \bf{20 weeks} \\ \hline
     \end{tabular}
 \end{frame}
 
