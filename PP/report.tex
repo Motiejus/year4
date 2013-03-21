@@ -15,10 +15,9 @@
 
 \begin{document}
 
-\title{Personal Project Report\\
-    Paxos on many-core platforms}
+\title{Paxos on many-core platforms}
 \author{Motiejus Jakštys}
-\date{1 January 2013}
+\date{21 March 2013}
 
 \maketitle
 
@@ -31,8 +30,9 @@ scale, for many-core chips. In this project we research ability of an
 application of distributed synchronization, state machine replication, on a
 many-core chip.
 
-The plan is to look at many-core programming approaches, and, as a use case,
-implement and test Classic Paxos in Erlang on a 64-core machine TILEPro64.
+The work looks at many-core programming approaches, and, as a use case,
+implements and test Classic Paxos in Erlang on a 64-core network-on-chip
+TILEPro64.
 
 \end{abstract}
 
@@ -53,7 +53,7 @@ many-core platforms.
 Section~\ref{sec:paxos-api} shows the API and architecture of classic Paxos.
 Section~\ref{sec:conclusion} presents conclusions and future work.
 
-\section{Changes in many-core platforms}
+\subsection{Changes in Moore's law}
 \label{sec:many-core}
 
 During the last decade Moore's law had changed the rules of machine performance.
@@ -68,7 +68,7 @@ not pay off; other approach is needed. According to inverse Pollack's
 rule\cite{pollack}, highest computational bandwidth will be achieved by
 parallelizing the work on many small cores\cite{1kcorechips}.
 
-Borkar et. al. goes into more detail about this.
+Borkar et. al. goes into more detail about this\cite{future-microprocessors}:
 
 \begin{quote}
 
@@ -118,31 +118,27 @@ percentage of code on parallel speedup.
     \label{fig:amdahl}
 \end{figure}
 
+This is where the future of microprocessors is heading to: having more less
+powerful cores to do the work\cite{future-microprocessors}, and programming
+languages and tools are developed to make parallel programming easier, i.e. to
+reduce the serial component.
+
 The conclusions are that it is very important to reduce serial part of the
 program. In practice, it is complicated to get it right. We will come back to
 this further in the report.
 
-To sum up, this is where the future of microprocessors is heading to: having
-more less powerful cores to do the work\cite{future-microprocessors}, and
-programming languages and tools are developed to make parallel programming
-easier, i.e. to reduce the serial component.
+\section{Trends in many-core architectures}
+\label{sec:manycore-trends}
 
-\subsection{Inter-core communication}
-In current systems data exchange between cores is handled via shared memory,
-while maintaining the coherency of the CPUs caches. Conversely, Tilera employed
-a faster approach alongside: a high-bandwidth low-latency switched network
-between the cores, which can be used by applications for very fast and low
-latency data exchange directly between the CPUs\cite{tile64}.
+In order to solve performance improvement problems described in
+section~\ref{sec:many-core}, during recent years there has been much movement in
+many-core hardware development\footnote{Intel Tera:
+\url{http://www.intel.com/pressroom/kits/teraflops/}} \footnote{Adapteva and
+Parallella: \url{http://www.adapteva.com/}} \footnote{Tilera:
+\url{http://www.tilera.com/}}. We will look at two similar network-on-chip
+approaches.
 
-From functional perspective, this kind of many-core system in many aspects
-resembles a many-node cluster. Machines (tiles) communicate with each other by
-sending messages; machines (tiles) can fail; they have to synchronize their
-actions (think about locks and mutexes, which are much more complicated without
-having shared memory). Since message-passing based many-core chips are coming to
-the stage, it is important to investigate consensus algorithms in many-core
-systems.
-
-\section{About TILEPro64}
+\subsection{TILEPro64 by Tilera}
 \label{sec:tilera}
 
 \begin{figure}
@@ -161,8 +157,8 @@ There is high-speed, low-latency packet-switched network between the cores for a
 few purposes. Most interesting are two: shared L3 cache and User Dynamic
 Network, UDN.
 
-\subsection{Shared L3 cache}
-\begin{figure}[htb]
+\subsubsection{Shared L3 cache}
+\begin{figure}
     \centering
     \includegraphics[width=0.5\textwidth]{images/tile64_cpu.pdf}
     \caption{TILEPro64 single processor diagram\cite{tilepro64-diagram}}
@@ -174,7 +170,7 @@ and L2. L2 cache size is 64KiB. L3 is a "virtual cache" shared between tiles,
 which size is 64KiB * 64 = 4MiB, thus creating 4 MiB of quickly accessible
 on-chip cache.
 
-\subsection{User Dynamic Network (UDN)}
+\subsubsection{User Dynamic Network (UDN)}
 Tilera has very interesting feature: User Dynamic Network, UDN. It is very low
 latency (sending 130B message takes in the order of ticks) and high bandwidth
 (order of tens of gigabits per second) switched inter-core network.
@@ -183,10 +179,53 @@ It can be very interestingly exploited in message-passing systems for
 low-latency communication. Example of successful usage of this network is
 presented in section~\ref{sec:future-work}.
 
-\subsection{One or more Linux instances simultaneously}
+\subsubsection{One or more Linux instances simultaneously}
 TILEPro64 can run multiple Linux SMP instances on different tile configurations
 (1-64 cores per Linux instance). In this project we run single Linux SMP
 instance with 62 dedicated cores.
+
+\subsubsection{Inter-core communication}
+In current systems data exchange between cores is handled via shared memory,
+while maintaining the coherency of the CPUs caches. Conversely, Tilera employed
+a faster approach alongside: a high-bandwidth low-latency switched network
+between the cores, which can be used by applications for very fast and low
+latency data exchange directly between the CPUs\cite{tile64}.
+
+From functional perspective, this kind of many-core system in many aspects
+resembles a many-node cluster. Machines (tiles) communicate with each other by
+sending messages; machines (tiles) can fail; they have to synchronize their
+actions (think about locks and mutexes, which are much more complicated without
+having shared memory). Since message-passing based many-core chips are coming to
+the stage, it is important to investigate consensus algorithms in many-core
+systems.
+
+\subsection{Epiphany by Adapteva}
+
+Adapteva is another many-core chip provider which aims to make many-core
+computing cheap\cite{parallella-kickstarter}. From user's perspective
+Adapteva's Epiphany\cite{epiphany} is similar to TilePRO64: it is a
+network-on-chip, with many stand-alone cores, which can be used by userspace for
+message sending between cores.  Figure~\ref{fig:epiphany_64} shows the block
+diagram of Epiphany many-core chip.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\textwidth]{images/parallella_64core.png}
+    \caption{Adapteva's Epiphany\cite{parallella-kickstarter}}
+    \label{fig:epiphany_64}
+\end{figure}
+
+Adapteva are estimating to deliver massively parallel chips in near future: a 1K
+core chip by year 2014 and 16K core chip by year 2022.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\textwidth]{images/parallella_future.jpg}
+    \caption{Future of parallella\cite{parallella-kickstarter}}
+    \label{fig:parallella_future}
+\end{figure}
+
+This proves that many-core NOC architectures are gaining popularity.
 
 \section{Consensus and Paxos family overview}
 \label{sec:paxos-family}
@@ -492,7 +531,7 @@ There are three Classic Paxos implementations in Erlang
 way that it will be very difficult to extend the algorithm. Therefore classic
 paxos has been reimplemented.
 
-\subsection{Clasic Paxos in Erlang}
+\section{Clasic Paxos in Erlang}
 
 Here is the API of classic paxos:
 
@@ -538,9 +577,6 @@ all phases of this personal project.
 
 \clearpage
 \begin{thebibliography}{99}
-
-    \bibitem{fggc} Sutra,~P. \emph{Fast Genuine Generalized Consensus}. Reliable
-        Distributed Systems (SRDS), 2011 30th IEEE Symposium.
 
     \bibitem{hipe} Sagonas,~K., Wilhelmsson,~J. \emph{Efficient memory
         management for concurrent programs that use message passing}. Science of
@@ -621,6 +657,13 @@ all phases of this personal project.
     backend for GHC}. Proceedings of the 3rd ACM Haskell symposium on Haskell
     p.~109-120.
 
+    \bibitem{epiphany} Adapteva. \emph{Adapteva Epiphany multi core
+    architecture}.
+
+    \bibitem{parallella-kickstarter} Adapteva. \emph{Parallella - a
+    supercomputer for everyone}. {\small \url{
+http://kickstarter.com/projects/adapteva/parallella-a-supercomputer-for-everyone
+}}
 
 \end{thebibliography}
 
