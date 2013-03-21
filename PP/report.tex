@@ -11,7 +11,6 @@
 \usepackage{algpseudocode}
 \usepackage{algorithm}
 
-\newcommand{\fggc}{Fast Genuine Generalized Consensus}
 \renewcommand*\thesection{\arabic{section}}
 
 \begin{document}
@@ -32,8 +31,8 @@ scale, for many-core chips. In this project we research ability of an
 application of distributed synchronization, state machine replication, on a
 many-core chip.
 
-The plan is to implement and test Fast Genuine Generalised Consensus algorithm
-in Erlang on a 64-core machine TILEPro64.
+The plan is to look at many-core programming approaches, and, as a use case,
+implement and test Classic Paxos in Erlang on a 64-core machine TILEPro64.
 
 \end{abstract}
 
@@ -45,11 +44,11 @@ in Erlang on a 64-core machine TILEPro64.
 \subsection{Report outline}
 
 Section~\ref{sec:many-core} presents how computing in many-core systems changed
-recently. Section~\ref{sec:paxos-family} presents what consensus algorithms
-are. Section~\ref{sec:erlang-why} explains why Erlang was chosen for this
-application, section~\ref{sec:tilera} shows why Tilera64 was chosen as
-development platform, and section~\ref{sec:erlang-eval} evaluates Erlang
-suitability for many-core platforms.
+recently. Section~\ref{sec:tilera} shows why Tilera64 was chosen as development
+platform. Section~\ref{sec:paxos-family} presents what consensus algorithms are.
+Section~\ref{sec:erlang-why} explains why Erlang was chosen for this
+application, and section~\ref{sec:erlang-eval} evaluates Erlang suitability for
+many-core platforms.
 
 Section~\ref{sec:paxos-api} shows the API and architecture of classic Paxos.
 Section~\ref{sec:conclusion} presents conclusions and future work.
@@ -129,7 +128,6 @@ programming languages and tools are developed to make parallel programming
 easier, i.e. to reduce the serial component.
 
 \subsection{Inter-core communication}
-
 In current systems data exchange between cores is handled via shared memory,
 while maintaining the coherency of the CPUs caches. Conversely, Tilera employed
 a faster approach alongside: a high-bandwidth low-latency switched network
@@ -143,6 +141,52 @@ actions (think about locks and mutexes, which are much more complicated without
 having shared memory). Since message-passing based many-core chips are coming to
 the stage, it is important to investigate consensus algorithms in many-core
 systems.
+
+\section{About TILEPro64}
+\label{sec:tilera}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\textwidth]{images/tile64.pdf}
+    \caption{TILEPro64 processor network block diagram\cite{tilepro64-diagram}}
+    \label{fig:tile64}
+\end{figure}
+
+Figure~\ref{fig:tile64} is the block diagram of TILEPro64 processor. It consists
+of a mesh network of 64 {\em tiles}, where each {\em tile} houses a general
+purpose processor, cache, and a non-blocking router, which the tile uses to
+communicate with the other tiles on the processor.
+
+There is high-speed, low-latency packet-switched network between the cores for a
+few purposes. Most interesting are two: shared L3 cache and User Dynamic
+Network, UDN.
+
+\subsection{Shared L3 cache}
+\begin{figure}[htb]
+    \centering
+    \includegraphics[width=0.5\textwidth]{images/tile64_cpu.pdf}
+    \caption{TILEPro64 single processor diagram\cite{tilepro64-diagram}}
+    \label{fig:tile64_cpu}
+\end{figure}
+
+Like seen in figure~\ref{fig:tile64_cpu}, every tile has three caches: L1D, L1I
+and L2. L2 cache size is 64KiB. L3 is a "virtual cache" shared between tiles,
+which size is 64KiB * 64 = 4MiB, thus creating 4 MiB of quickly accessible
+on-chip cache.
+
+\subsection{User Dynamic Network (UDN)}
+Tilera has very interesting feature: User Dynamic Network, UDN. It is very low
+latency (sending 130B message takes in the order of ticks) and high bandwidth
+(order of tens of gigabits per second) switched inter-core network.
+
+It can be very interestingly exploited in message-passing systems for
+low-latency communication. Example of successful usage of this network is
+presented in section~\ref{sec:future-work}.
+
+\subsection{One or more Linux instances simultaneously}
+TILEPro64 can run multiple Linux SMP instances on different tile configurations
+(1-64 cores per Linux instance). In this project we run single Linux SMP
+instance with 62 dedicated cores.
 
 \section{Consensus and Paxos family overview}
 \label{sec:paxos-family}
@@ -196,30 +240,7 @@ important.
 Generalized Consensus and Paxos generalizes state-machine replication by
 reaching an agreement on a partially ordered set of commands.
 
-\fggc\ improves Generalized Consensus and Paxos in case of collision from six
-message delays to one.
-
-\subsection{Overview of Fast Genuine Generalized Consensus (FGGC)}
-
-From abstract\cite{fggc}:
-
-\begin{quote}
-Consensus is a central primitive for building replicated systems, but its
-latency constitutes a bottleneck. A well-known solution to consensus is Fast
-Paxos. In a recent paper, Lamport enhances Fast Paxos by leveraging the
-commutativity of concurrent commands. The new primitive, called Generalized
-Paxos, reduces the collision rate, and thus the latency of Fast Paxos. However
-if a collision occurs, the latency of Generalized Paxos equals six communication
-steps, which is higher than Fast Paxos. This paper presents FGGC, a novel
-consensus algorithm that reduces recovery delay when a collision occurs to
-one.
-\end{quote}
-
-We want to implement FGGC, because it is the most flexible version to implement
-a realistic state machine in Paxos, and is the fastest (least message delays)
-generalized version that we are aware of as of time of the work.
-
-\subsection{Language Choice}
+\section{Language Choice}
 \label{sec:erlang-why}
 
 The language decision was based on these factors:
@@ -229,11 +250,20 @@ The language decision was based on these factors:
     \item Performance.
 \end{enumerate}
 
-Initially Haskell was chosen for the algorithm implementation, for the following
-reasons. It is very convenient to program state machines in a functional
-language; it compiles to machine code, which makes it a good candidate for
-performance. Furthermore, llvm compiler looked like a promising sign for
-portability.
+\subsection{Cloud Haskell}
+
+Initially Cloud Haskell\cite{cloud-haskell}  was chosen for the algorithm
+implementation, for the following reasons. It is very convenient to program
+state machines in a functional language; it compiles to machine code, which
+makes it a good candidate for performance. Furthermore, llvm
+backend\cite{llvm-haskell} looked like a promising sign for portability.
+
+\begin{quote}
+    Cloud Haskell is a library for distributed concurrency in Haskell. The
+    purpose is to make it easier to write programs for clusters of machines. It
+    provides a message passing communication model, inspired by and very similar
+    to that of Erlang.
+\end{quote}
 
 However, after some research it turned out that cross-compilation is impossible,
 and the whole GHC must be ported to Tilera platform. Porting GHC to Tilera was
@@ -287,55 +317,6 @@ Several nodes can be on different machines. Nodes can communicate over TCP, SSL
 and unix pipes (default and most popular is TCP). Processes within a node can
 transparently send messages to other processes (semantics are the same as if
 they were sent from the same node), monitor other nodes or processes.
-
-\section{About TILEPro64}
-\label{sec:tilera}
-
-\begin{figure}
-    \centering
-    \includegraphics[width=0.5\textwidth]{images/tile64.pdf}
-    \caption{TILEPro64 processor network block diagram\cite{tilepro64-diagram}}
-    \label{fig:tile64}
-\end{figure}
-
-Figure~\ref{fig:tile64} is the block diagram of TILEPro64 processor. It consists
-of a mesh network of 64 {\em tiles}, where each {\em tile} houses a general
-purpose processor, cache, and a non-blocking router, which the tile uses to
-communicate with the other tiles on the processor.
-
-There is high-speed, low-latency packet-switched network between the cores for a
-few purposes. Most interesting are two: shared L3 cache and User Dynamic
-Network, UDN.
-
-\subsection{Shared L3 cache}
-
-\begin{figure}[htb]
-    \centering
-    \includegraphics[width=0.5\textwidth]{images/tile64_cpu.pdf}
-    \caption{TILEPro64 single processor diagram\cite{tilepro64-diagram}}
-    \label{fig:tile64_cpu}
-\end{figure}
-
-Like seen in figure~\ref{fig:tile64_cpu}, every tile has three caches: L1D, L1I
-and L2. L2 cache size is 64KiB. L3 is a "virtual cache" shared between tiles,
-which size is 64KiB * 64 = 4MiB, thus creating 4 MiB of quickly accessible
-on-chip cache.
-
-\subsection{User Dynamic Network (UDN)}
-
-Tilera has very interesting feature: User Dynamic Network, UDN. It is very low
-latency (sending 130B message takes in the order of ticks) and high bandwidth
-(order of tens of gigabits per second) switched inter-core network.
-
-It can be very interestingly exploited in message-passing systems for
-low-latency communication. Example of successful usage of this network is
-presented in section~\ref{sec:future-work}.
-
-\subsection{One or more Linux instances simultaneously}
-
-TILEPro64 can run multiple Linux SMP instances on different tile configurations
-(1-64 cores per Linux instance). In this project we run single Linux SMP
-instance with 62 dedicated cores.
 
 \section{Erlang evaluation on Tilera64}
 \label{sec:erlang-eval}
@@ -502,21 +483,10 @@ the shared memory. Most importantly, application developer would not notice the
 usability change; however, this would potentially eliminate a lot of bottle-neck
 during message passing which incurs by going out of chip.
 
-\section{FGGC in Erlang}
 \label{sec:paxos-api}
 
-Implementation of FGGC should be done in this order:
-
-\begin{enumerate}
-    \item Classic paxos.
-    \item State machine using classic paxos.
-    \item Generalized Paxos.
-    \item GPaxos.
-    \item \fggc.
-\end{enumerate}
-
-Every step is a pre-requisite for the next one. There are three Classic Paxos
-implementations in Erlang \footnote{\url{https://github.com/gburd/gen\_paxos}}
+There are three Classic Paxos implementations in Erlang
+\footnote{\url{https://github.com/gburd/gen\_paxos}}
 \footnote{\url{http://libpaxos.sourceforge.net/paxos\_projects.php\#erlangpaxos}}
 \footnote{\url{http://code.google.com/p/scalaris/}}, but they are written in a
 way that it will be very difficult to extend the algorithm. Therefore classic
@@ -547,60 +517,19 @@ acquired during the start-up of proposers, acceptors and learners; in this work
 we are not concerned about the start-up of the cluster and how this value is
 generated.
 
-\subsection{State machine replication API using Classic Paxos}
-
-Once Classic Paxos is done, Paxos state machine can be implemented. The API is
-very similar, but {\tt id()} is associated with every election (election id):
-
-\begin{verbatim}
--type id() :: pos_integer().
--type learner_callback() :: fun((fsmref(), id(), value()) -> ok).
-
-%% @doc Specify learner function per election.
-%% The passed function will be executed when a value is learned.
--spec init_learner(fsmref(), learner_callback()) -> ok.
-
-%% @doc Executed by application in order to propose a value
--spec propose(fsmref(), id(), value()) -> ok.
-\end{verbatim}
-
-With these two functions user is able to implement a replicated state machine.
-However, like observed before, in most systems different commands issued in
-parallel are converging, i.e. can be executed in any order.
-
-To overcome this inefficiency, we present the generalized API.
-
-\subsection{State machine replication API using Generalized Paxos}
-
-\begin{verbatim}
--type id() :: pos_integer().
--type command() :: term().
-
--type learner_callback() :: fun((fsmref(), id(), value()) -> ok).
--type commands_commute() :: fun((command(), command()) -> boolean()).
-
-%% @doc Specify learner function and command comparison fun per election.
--spec init_learner(fsmref(), learner_callback(), compare_commands()) -> ok.
-
-%% @doc Executed by application in order to propose a value
--spec propose(fsmref(), [id()], [value()]) -> ok.
-\end{verbatim}
-
-Note to Wim: {\tt propose/3} API most likely does not make sense.
-
 \section{Conclusion}
 \label{sec:conclusion}
 
-This paper presents the suitability of Erlang for algorithm implementation on
-many-core machines and suggests an API for state machine replication using
-\fggc.
+Erlang programming language is suitable for algorithm implementation on
+many-core systems.
 
 \subsection{Future work}
 \label{sec:future-work}
 
-Implementation of FGGC and performance evaluation on heterogeneous cluster is
-left for future work. Also using UDN for message passing in Erlang virtual
-machine would also be a very interesting project.
+Using UDN for message passing in Erlang virtual machine would also be a very
+interesting project. Moreover, the implementation of
+Paxos\footnote{\url{https://github.com/Motiejus/epaxos}} is planned to be used
+in industrial environment in a cluster management application.
 
 \subsection{Acknowledgement}
 
@@ -684,6 +613,14 @@ all phases of this personal project.
 
     \bibitem{tilepro64-diagram} Agarwal,~A. \emph{Proceedings of HPEC Workshop,
     2007}
+
+    \bibitem{cloud-haskell} Peyton-Jones,~S. \emph{Towards Haskell in the
+    cloud}. Proceedings of the 4th ACM symposium on Haskell. p.~118-129.
+
+    \bibitem{llvm-haskell} Terei,~D.~A., Chakravarty,~M.~T.~M. \emph{An llVM
+    backend for GHC}. Proceedings of the 3rd ACM Haskell symposium on Haskell
+    p.~109-120.
+
 
 \end{thebibliography}
 
