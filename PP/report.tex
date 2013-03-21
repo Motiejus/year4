@@ -261,7 +261,7 @@ algorithm, the value chosen by the $i^{th}$ instance being the $i^{th}$ state
 machine command in the sequence.
 \end{quote}
 
-\subsection{Paxos as black box}
+\subsection{Paxos as Black Box}
 
 This section describes in high level what Paxos does. In the diagrams below
 white ellipses are members of the cluster (machines or cores), rectangles are
@@ -272,22 +272,57 @@ state machine, what's for lunch or some other value of interest. Paxos will
 ensure that only one value will be learnt (in case of failures, on value will be
 learnt, but then election can be retried after a while).
 
+Figure~\ref{fig:paxos-highlevel} shows a simplified flow of Paxos algorithm from
+application developer's point of view. Note that that is almost all developer
+needs to know about Paxos in order to be able to use epaxos\cite{epaxos}.
+
 \begin{figure}
-    \begin{subfigure}[b]{0.2\textwidth}
+    \begin{subfigure}[b]{0.22\textwidth}
         \includegraphics[width=\textwidth]{images/paxos1.pdf}
         \caption{Send values to Paxos "black box"}
     \end{subfigure}\hfill
-    \begin{subfigure}[b]{0.3\textwidth}
+    \begin{subfigure}[b]{0.32\textwidth}
         \includegraphics[width=\textwidth]{images/paxos2.pdf}
-        \caption{Value is elected}
+        \caption{val4 is elected}
     \end{subfigure}\hfill
-    \begin{subfigure}[b]{0.3\textwidth}
+    \begin{subfigure}[b]{0.32\textwidth}
         \includegraphics[width=\textwidth]{images/paxos3.pdf}
-        \caption{Value is broadcasted back}
+        \caption{val4 is broadcasted back and learnt}
     \end{subfigure}
 
-    \caption{Paxos in high level}\label{fig:paxos-highlevel}
+    \caption{Paxos in high level}
+    \label{fig:paxos-highlevel}
 \end{figure}
+
+Original Paxos algorithm is presented in \cite{classic-paxos} and
+\cite{paxos-simple} by Leslie Lamport.
+
+\subsection{Considerations about running Paxos on multi-core}
+
+\subsubsection{Number of messages per election}
+
+In a few places Paxos algorithm is left unspecified. For example, a proposer
+must send its proposal to a {\em majority of acceptors}. If there are 999
+acceptors, the algorithm will be satisfied if the proposal will be sent to 500,
+750 or all 999 acceptors. In case there are no failures, sending 500 messages
+gives equivalent result as to sending 999 messages. It is up to the developer to
+decide what is more important: safety or performance, or somewhere in the
+middle.
+
+Important property to know when designing a distributed system is how
+communication volume increases with increasing number of participants. In Paxos
+case, number of messages and number of participants are linearly correlated.
+Regarding message size. Because Paxos does not store any participant information
+in the messages, message size does not increase if the number of voters
+increases.
+
+\subsubsection{Possible optimization using shared memory}
+
+Paxos was designed for shared-nothing message-passing unreliable systems. That
+means whenever a message about proposed value is sent, payload is always sent
+together (the value proposed). On many-core systems this can be optimized by
+sending a reference to the proposed message payload (or pointer in memory)
+instead of always sending it by value.
 
 \section{Language Choice}
 \label{sec:erlang-why}
