@@ -10,6 +10,7 @@
 \usepackage{hyperref}
 \usepackage{algpseudocode}
 \usepackage{algorithm}
+\usepackage{subcaption}
 
 \renewcommand*\thesection{\arabic{section}}
 
@@ -260,24 +261,33 @@ algorithm, the value chosen by the $i^{th}$ instance being the $i^{th}$ state
 machine command in the sequence.
 \end{quote}
 
-While this is simple and reliable, sometimes is inefficient. Two commands issued
-in parallel can \emph{interfere} or \emph{commute}. \emph{Commute} means the
-order of execution does not matter; likewise, \emph{interfering} commands must
-be executed in the same order. For example, the order of two \emph{deposit}
-operations on the same account does not matter, so these two commands
-\emph{commute}. Likewise, two commands always commute if they are executed on
-different accounts. However, \emph{deposit} and \emph{withdrawal} of the same
-account must be executed in the same order as they can produce different
-outcomes (negative balance) if executed in different orders.
+\subsection{Paxos as black box}
 
-In many systems, concurrently issued commands almost always commute. An
-implementation that saves a message delay in almost all cases can be
-significantly more efficient than one using the conventional state-machine
-approach\cite{generalized-consensus}. For that reasons generalized consensus is
-important.
+This section describes in high level what Paxos does. In the diagrams below
+white ellipses are members of the cluster (machines or cores), rectangles are
+proposed values, and the ellipse with "Paxos" is the Paxos black-box algorithm.
 
-Generalized Consensus and Paxos generalizes state-machine replication by
-reaching an agreement on a partially ordered set of commands.
+Scenario: a few nodes want to agree on some value. It can be an $i$'th command in
+state machine, what's for lunch or some other value of interest. Paxos will
+ensure that only one value will be learnt (in case of failures, on value will be
+learnt, but then election can be retried after a while).
+
+\begin{figure}
+    \begin{subfigure}[b]{0.2\textwidth}
+        \includegraphics[width=\textwidth]{images/paxos1.pdf}
+        \caption{Send values to Paxos "black box"}
+    \end{subfigure}\hfill
+    \begin{subfigure}[b]{0.3\textwidth}
+        \includegraphics[width=\textwidth]{images/paxos2.pdf}
+        \caption{Value is elected}
+    \end{subfigure}\hfill
+    \begin{subfigure}[b]{0.3\textwidth}
+        \includegraphics[width=\textwidth]{images/paxos3.pdf}
+        \caption{Value is broadcasted back}
+    \end{subfigure}
+
+    \caption{Paxos in high level}\label{fig:paxos-highlevel}
+\end{figure}
 
 \section{Language Choice}
 \label{sec:erlang-why}
@@ -533,20 +543,22 @@ paxos has been reimplemented.
 
 \section{Clasic Paxos in Erlang}
 
-Here is the API of classic paxos:
+\begin{figure}
+    \begin{verbatim}
+    -type fsmref() :: reference().
+    -type value() :: term().
+    -type learner_callback() :: fun((value()) -> ok).
 
-\begin{verbatim}
--type fsmref() :: reference().
--type value() :: term().
--type learner_callback() :: fun((value()) -> ok).
+    %% Specify learner function per election.
+    %% The passed function will be executed when a value is learned.
+    -spec init_learner(fsmref(), learner_callback()) -> ok.
 
-%% @doc Specify learner function per election.
-%% The passed function will be executed when a value is learned.
--spec init_learner(fsmref(), learner_callback()) -> ok.
-
-%% @doc Executed by application in order to propose a value
--spec propose(fsmref(), value()) -> ok.
-\end{verbatim}
+    %% Executed by application in order to propose a value
+    -spec propose(fsmref(), value()) -> ok.
+    \end{verbatim}
+    \caption{API of Classic Paxos\cite{epaxos}}
+    \label{fig:paxos-api}
+\end{figure}
 
 To propose a value, application calls {\tt propose()}. When the value (same or
 other one) is learned, user's callback {\tt learn()} is called.
@@ -647,6 +659,17 @@ all phases of this personal project.
     \bibitem{lundin-smp} Lundin,~K. \emph{About Erlang/OTP and Multi-core
         performance in particular}. Talk at Erlang Factory London June 26 2009.
 
+    \bibitem{epiphany} Adapteva. \emph{Adapteva Epiphany multi core
+    architecture}.
+
+    \bibitem{parallella-kickstarter} Adapteva. \emph{Parallella - a
+    supercomputer for everyone}. {\small \url{
+http://kickstarter.com/projects/adapteva/parallella-a-supercomputer-for-everyone
+}}
+
+    \bibitem{epaxos} Classic Paxos implementation in Erlang. {\small \url{
+    https://github.com/Motiejus/epaxos}}.
+
     \bibitem{tilepro64-diagram} Agarwal,~A. \emph{Proceedings of HPEC Workshop,
     2007}.
 
@@ -656,14 +679,6 @@ all phases of this personal project.
     \bibitem{llvm-haskell} Terei,~D.~A., Chakravarty,~M.~T.~M. \emph{An llVM
     backend for GHC}. Proceedings of the 3rd ACM Haskell symposium on Haskell
     p.~109-120.
-
-    \bibitem{epiphany} Adapteva. \emph{Adapteva Epiphany multi core
-    architecture}.
-
-    \bibitem{parallella-kickstarter} Adapteva. \emph{Parallella - a
-    supercomputer for everyone}. {\small \url{
-http://kickstarter.com/projects/adapteva/parallella-a-supercomputer-for-everyone
-}}
 
 \end{thebibliography}
 
