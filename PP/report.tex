@@ -354,7 +354,7 @@ virtual machine support for many-core architectures including Erlang.
 
 Jianrong \cite{erlang-manycore-scalability} analyzes performance characteristics
 of Erlang virtual machine on Tilera64. The paper focused on benchmarking
-\emph{embarrasingly parallel} programs (ones that can run without a need for
+\emph{embarrassingly parallel} programs (ones that can run without a need for
 synchronization with each other). It achieved speedups of 30-40 by using 64
 cores.
 
@@ -381,21 +381,19 @@ practice scalability is constrained by aspects of the language and virtual
 machine. Moreover existing profiling and debugging tools don't scale.
 \end{quote}
 
-\subsection{Erlang performance on TILE64 out of the box}
+\subsection{Erlang parallelism performance on TILEPro64}
 
-Performance of out-of-the-box Erlang on TILE64 with a program that does no
-synchronization between the workers was tested. It works as follows: $Master$
-process generates $N$ lists with 100000 random numbers (where $N$ is number of
-workers) and spawns a new $Worker$ process passing the generated list. Once all
-workers are spawned, $Master$ sends a message to all the workers to {\tt begin
-work}. When $Master$ process receives a number from every worker, the program
-terminates.
+Performance of Erlang on TILE64 with a program that does no synchronization
+between the workers was tested. It works as follows: $Master$ process generates
+$N$ lists with 100000 random numbers (where $N$ is number of workers) and spawns
+a new $Worker$ process passing the generated list. Once all workers are spawned,
+$Master$ sends a message to all the workers to {\tt begin work}. When $Master$
+process receives a number from every worker, the program terminates.
 
 $Worker$ process: it receives {\tt begin work} message, sorts the list and
 sends median to the $Master$. Then terminates. Pseudocode:
 
 \begin{algorithm}
-    \caption{pseudo-code of embarrasingly parallel program}
     \begin{algorithmic}
         \Function{Master}{}
             \State $PidList \gets []$
@@ -406,6 +404,8 @@ sends median to the $Master$. Then terminates. Pseudocode:
             \State $Pid \gets spawn(Worker, L)$
             \Comment{spawn $Worker$ process and pass $L$ to it}
             \State Append $Pid$ to $PidList$
+            \State $StartTimestamp \gets now()$
+            \Comment{Start measuring execution time}
             \For{$Worker$ in $PidList$}
                 \State $Worker$ ! {\tt 'begin work'}
                 \Comment{send {\tt 'begin work'} to $Worker$}
@@ -415,6 +415,7 @@ sends median to the $Master$. Then terminates. Pseudocode:
                 \Comment{receive $\_Number$ (which is a median of some list) and
                 discard it}
             \EndFor
+            \State print $Delta \gets now() - StartTimestamp$
         \EndFunction
 
         \Function{Worker}{$L$}
@@ -427,23 +428,62 @@ sends median to the $Master$. Then terminates. Pseudocode:
         \EndFunction
         \Comment{at this point $Worker$ process terminates}
     \end{algorithmic}
+    \caption{pseudo-code of embarrassingly parallel program}
+    \label{alg:embarrassing}
 \end{algorithm}
 
+\subsubsection{Serial component in embarrassingly parallel program}
+
+Note that this program actually has a serial component it's the sending messages
+{\tt begin work} and gathering the median to the single process. To check the
+real cost of it, a similar program was created to check just process spawning
+and message sending overhead. It works the same way like
+program~\ref{alg:embarrassing}, but instead of passing a list and an item, {\tt
+ok} is passed to process and back. Master process creates 100000 workers, sends
+each of them its {\em pid} and waits for 100000 {\tt ok}'s. Worker process
+replies to the {\em pid} it received with an {\tt ok}.
+
+On Intel Core Duo CPU @ 1.66GHz the whole process takes 0.85-0.9 seconds, or up
+to $9\mu s$ per process. So the serial overhead of program~\ref{alg:embarrassing}
+is not more than $9*256 = 2304 \mu s$, or no more than two and a half
+milliseconds. With 1 core program\ref{alg:embarrassing} runs for around 5
+minutes, so 2.5 milliseconds of serial component is overwhelmed by actual work
+of the workers and can be neglected.
+
+\subsection{Embarrassingly parallel program scalability and VM tuning}
+
 We would expect this program to scale linearly while increasing number of cores.
-In TILEPro64 speedup cap is around 37, like observed from
-figure~\ref{fig:parallel_speedup}.
+Initial results of the benchmarks are shown in figure~\ref{fig:bad_speedup}.
+The maximum speedup is around 12 with a spike to 14, and the results are very
+unstable when increasing the number of cores. To summarize, initial benchmarks
+show that Erlang VM without tuning on a many-core machine performs poorly.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.9\textwidth]{images/bad_speedup.pdf}
+    \caption{Initial speedup of algorithm~\ref{alg:embarrassing} (5 measurements)}
+    \label{fig:bad_speedup}
+\end{figure}
+
+Kenneth Lundin gave a talk in Erlang Factory\cite{lundin-smp} about Erlang
+many-core performance and suggested to pin Erlang schedulers (OS threads) to
+hardware cores. This can be achieved by passing {\tt +sbt db} flag on during
+startup of the Erlang virtual machine. This adjustment gave significant
+improvement: performance stabilized and jumped to around 37 for 56 cores, as
+shown in figure~\ref{fig:parallel_speedup}.
 
 \begin{figure}
     \centering
     \includegraphics[width=0.9\textwidth]{images/speedup.pdf}
-    \caption{Speedup of embarrasingly parallel program}
+    \caption{Speedup of algorithm~\ref{alg:embarrassing}}
     \label{fig:parallel_speedup}
 \end{figure}
 
 \begin{figure}
     \centering
     \includegraphics[width=0.9\textwidth]{images/slowdown.pdf}
-    \caption{Slowdown of the same program}
+    \caption{Slowdown of algorithm~\ref{alg:embarrassing} (derived
+    from figure~\ref{fig:parallel_speedup})}
     \label{fig:parallel_slowdown}
 \end{figure}
 
@@ -456,10 +496,10 @@ Jianrong\cite{erlang-manycore-scalability}.
 
 Currently in Erlang message sending between processes is implemented using
 shared memory, locks and mutexes. However, it would be a very interesting
-project to replace inter-erlang-process communication with UDN eliminating the
-need of shared memory at all. Most importantly, application developer would not
-notice the usability change; however, this would potentially eliminate a lot of
-bottle-neck during message passing which incurs by going out of chip.
+project to replace inter-erlang-process communication with UDN thus eliminating
+the shared memory. Most importantly, application developer would not notice the
+usability change; however, this would potentially eliminate a lot of bottle-neck
+during message passing which incurs by going out of chip.
 
 \section{FGGC in Erlang}
 \label{sec:paxos-api}
@@ -637,6 +677,10 @@ all phases of this personal project.
     \bibitem{amdahls-law} Hill,~Mark~D. \emph{Amdahl's Law in the Multicore
         Era}. Dept. of Comput. Sci., Univ. of Wisconsin-Madison, Madison, WI
         Marty, Michael R.  Vol.~41, Issue~7. p.~33-38.
+
+    \bibitem{lundin-smp} Lundin,~K. \emph{About Erlang/OTP and Multi-core
+        performance in particular}. Talk at Erlang Factory London June 26 2009.
+
 
 \end{thebibliography}
 
