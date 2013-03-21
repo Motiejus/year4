@@ -8,8 +8,10 @@
 \usepackage{amsmath}
 \usepackage{verbatim}
 \usepackage{hyperref}
-\newcommand{\fggc}{Fast Genuine Generalized Consensus}
+\usepackage{algpseudocode}
+\usepackage{algorithm}
 
+\newcommand{\fggc}{Fast Genuine Generalized Consensus}
 \renewcommand*\thesection{\arabic{section}}
 
 \begin{document}
@@ -149,13 +151,6 @@ distributed system. The most primitive application is reliably learning a value
 by a majority of acceptors. It works as follows: a set of proposers propose a
 value, and the algorithm guarantees that only one value will be chosen by a
 majority of acceptors. In worse case no value will be chosen.
-
-%There is one family of algorithms that achieve this, the Paxos family.
-%Classical Paxos (the first version of Paxos) was first published by Leslie
-%Lamport in 1998\cite{classic-paxos}. Since then many variations of the algorithm
-%emerged\footnote{Just a little bit of
-%    \href{http://scholar.google.com/scholar?q=paxos}{searching} will give dozens
-%    of algorithms that have a word "Paxos" in it.}.
 
 The most popular application is distributed state machine implementation
 \footnote{\url{http://en.wikipedia.org/wiki/Paxos\_(computer\_science)}}. A
@@ -388,38 +383,51 @@ machine. Moreover existing profiling and debugging tools don't scale.
 
 \subsection{Erlang performance on TILE64 out of the box}
 
-I tested performance of out-of-the-box Erlang on TILE64 with a program that does
-no synchronization between the workers. It works as follows: "master" process
-generates {\tt N} lists with 100000 random numbers (where {\tt N} is number of
-workers) and spawns a new {\tt Worker} process passing the generated list. Once
-all workers are spawned, {\tt Master} sends a message to all the workers to {\tt
-begin work}. When {\tt Master} process receives a number from every worker, the
-program stops.
+Performance of out-of-the-box Erlang on TILE64 with a program that does no
+synchronization between the workers was tested. It works as follows: $Master$
+process generates $N$ lists with 100000 random numbers (where $N$ is number of
+workers) and spawns a new $Worker$ process passing the generated list. Once all
+workers are spawned, $Master$ sends a message to all the workers to {\tt begin
+work}. When $Master$ process receives a number from every worker, the program
+terminates.
 
-{\tt Worker} process: {\tt begin work} message is received, it sorts the list
-and sends median to the {\tt Master}. Pseudocode:
+$Worker$ process: it receives {\tt begin work} message, sorts the list and
+sends median to the $Master$. Then terminates. Pseudocode:
 
-\begin{verbatim}
-Master:
-    PidList <- []
-    N <- 128
-    For every N:
-        L <- list of 100000 random numbers
-        % Spawn Worker process and pass L to it
-        Pid <- spawn(Worker, L)
-        Append Pid to PidList
-    for Worker in PidList:
-        Worker ! 'begin work'  % send 'begin work' to worker
-    for Worker in PidList:
-        receive _Number
-    halt
+\begin{algorithm}
+    \caption{pseudo-code of embarrasingly parallel program}
+    \begin{algorithmic}
+        \Function{Master}{}
+            \State $PidList \gets []$
+            \State $N \gets 128$
+            \For{every $N$}
+                \State $L \gets$ list of 100000 random numbers
+            \EndFor
+            \State $Pid \gets spawn(Worker, L)$
+            \Comment{spawn $Worker$ process and pass $L$ to it}
+            \State Append $Pid$ to $PidList$
+            \For{$Worker$ in $PidList$}
+                \State $Worker$ ! {\tt 'begin work'}
+                \Comment{send {\tt 'begin work'} to $Worker$}
+            \EndFor
+            \For{$Worker$ in $PidList$}
+                \State receive $\_Number$
+                \Comment{receive $\_Number$ (which is a median of some list) and
+                discard it}
+            \EndFor
+        \EndFunction
 
-Worker(L):                % note that worker receives L on startup
-    receive 'begin work'  % block until 'begin work' is received
-    L2 <- sort(L)         % L2 is sorted L1
-    Master ! median(L2)   % Send median of L2 to Master
-                          % At this point process dies
-\end{verbatim}
+        \Function{Worker}{$L$}
+            \Comment{note that worker receives $L$ on startup (big list)}
+            \State receive {\tt 'begin work'}
+            \Comment{wait until {\tt 'begin work'} is received from master}
+            \State $L2 \gets sort(L)$
+            \State $Master$ ! $median(L2)$
+            \Comment{send median of $L2$ to $Master$}
+        \EndFunction
+        \Comment{at this point $Worker$ process terminates}
+    \end{algorithmic}
+\end{algorithm}
 
 We would expect this program to scale linearly while increasing number of cores.
 In TILEPro64 speedup cap is around 37, like observed from
@@ -439,7 +447,7 @@ figure~\ref{fig:parallel_speedup}.
     \label{fig:parallel_slowdown}
 \end{figure}
 
-Figure~\ref{fig:parallel_slowdown} is derived from~\ref{fig:parallel_speedupp}
+Figure~\ref{fig:parallel_slowdown} is derived from~\ref{fig:parallel_speedup}
 and shows precisely the loss of speedup while increasing the number of cores.
 
 This experimental data shows that Erlang scales pretty well with increasing
