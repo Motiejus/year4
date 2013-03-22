@@ -11,6 +11,7 @@
 \usepackage{algpseudocode}
 \usepackage{algorithm}
 \usepackage{subcaption}
+\usepackage{appendix}
 
 \renewcommand*\thesection{\arabic{section}}
 
@@ -267,10 +268,11 @@ This section describes in high level what Paxos does. In the diagrams below
 white ellipses are members of the cluster (machines or cores), rectangles are
 proposed values, and the ellipse with "Paxos" is the Paxos black-box algorithm.
 
-Scenario: a few nodes want to agree on some value. It can be an $i$'th command in
-state machine, what's for lunch or some other value of interest. Paxos will
-ensure that only one value will be learnt (in case of failures, on value will be
-learnt, but then election can be retried after a while).
+Scenario: a few nodes want to agree on some value. It can be an $i$'th command
+in state machine, what's for lunch or some other value of interest that nodes
+must agree on. Paxos will ensure that only one value will be learnt (in case of
+failures, on value will be learnt, but then election can be retried after a
+while).
 
 Figure~\ref{fig:paxos-highlevel} shows a simplified flow of Paxos algorithm from
 application developer's point of view. Note that that is almost all developer
@@ -297,32 +299,35 @@ needs to know about Paxos in order to be able to use epaxos\cite{epaxos}.
 Original Paxos algorithm is presented in \cite{classic-paxos} and
 \cite{paxos-simple} by Leslie Lamport.
 
-\subsection{Considerations about running Paxos on multi-core}
+\subsection{About Paxos on many-core}
 
 \subsubsection{Number of messages per election}
 
-In a few places Paxos algorithm is left unspecified. For example, a proposer
-must send its proposal to a {\em majority of acceptors}. If there are 999
-acceptors, the algorithm will be satisfied if the proposal will be sent to 500,
-750 or all 999 acceptors. In case there are no failures, sending 500 messages
-gives equivalent result as to sending 999 messages. It is up to the developer to
-decide what is more important: safety or performance, or somewhere in the
-middle.
+In a few places the exact behaviour of Paxos algorithm is left unspecified. For
+example, a proposer must send its proposal to a {\em majority of acceptors}. If
+there are 999 acceptors, the algorithm will be satisfied if the proposal will be
+sent to 500, 750 or all 999 acceptors. In case there are no failures, sending
+500 messages gives equivalent result as to sending 999 messages. It is up to the
+developer to decide what is more important: safety or performance, or somewhere
+in the middle.
 
 Important property to know when designing a distributed system is how
 communication volume increases with increasing number of participants. In Paxos
 case, number of messages and number of participants are linearly correlated.
-Regarding message size. Because Paxos does not store any participant information
-in the messages, message size does not increase if the number of voters
-increases.
+Also message size with increasing system is a concern. Because Paxos does not
+store any participant information in the messages, message size does not
+increase if the number of voters increases.
 
 \subsubsection{Possible optimization using shared memory}
 
 Paxos was designed for shared-nothing message-passing unreliable systems. That
-means whenever a message about proposed value is sent, payload is always sent
-together (the value proposed). On many-core systems this can be optimized by
-sending a reference to the proposed message payload (or pointer in memory)
-instead of always sending it by value.
+means whenever a message about proposed value is sent, payload (the value
+proposed) is always sent together. This is inefficient, because the value might
+be sent only once to the learners, instead of going
+proposer-acceptor-proposer-acceptor loop. On many-core systems with shared
+memory this can be optimized by sending a reference to the proposed message
+payload (or pointer in memory) instead of always sending the payload. The
+learner can retrieve the payload from proposer when the election is over.
 
 \section{Language Choice}
 \label{sec:erlang-why}
@@ -346,15 +351,18 @@ backend\cite{llvm-haskell} looked like a promising sign for portability.
     Cloud Haskell is a library for distributed concurrency in Haskell. The
     purpose is to make it easier to write programs for clusters of machines. It
     provides a message passing communication model, inspired by and very similar
-    to that of Erlang.
+    to that of
+    Erlang.\footnote{\url{http://www.haskell.org/haskellwiki/Cloud\_Haskell}}
 \end{quote}
 
 However, after some research it turned out that cross-compilation is impossible,
 and the whole GHC must be ported to Tilera platform. Porting GHC to Tilera was
 out of the scope of the project, so other languages were considered.
 
+\subsection{Erlang}
+
 Another language candidate was Erlang. Erlang is a general-purpose, concurrent,
-and functional programming language developed by Engineers from Ericsson in
+and functional programming language developed by engineers from Ericsson in
 1980s. Erlang is a language based on the  {\em actor model}, characterized by
 the following features:
 
@@ -400,7 +408,10 @@ An Erlang {\em node} is an Erlang VM instance which can talk to other nodes.
 Several nodes can be on different machines. Nodes can communicate over TCP, SSL
 and unix pipes (default and most popular is TCP). Processes within a node can
 transparently send messages to other processes (semantics are the same as if
-they were sent from the same node), monitor other nodes or processes.
+they were sent from the same node), monitor other nodes or processes. That all
+means that in Erlang you can create a homogeneous cluster of nodes and speak to
+the processes in other nodes using the same semantics as if the processes were
+local (in the same node).
 
 \section{Erlang evaluation on Tilera64}
 \label{sec:erlang-eval}
@@ -410,7 +421,7 @@ they were sent from the same node), monitor other nodes or processes.
 A good example of a very robust synchronization between cores implementation
 using message passing is memcached port to Tilera done by Facebook. UDN was used
 for action orchestration and state synchornization\cite{facebook-tilera}. That
-yielded impressive performance compared to standard architecture servers.
+exhibited impressive performance compared to standard architecture servers.
 
 Interest in suitability of software development with Erlang on multi-core
 processors is increasing. For instance, Convey et~al.\cite{erlang-acoustic}
@@ -449,7 +460,7 @@ machine. Moreover existing profiling and debugging tools don't scale.
 
 \subsection{Erlang parallelism performance on TILEPro64}
 
-Performance of Erlang on TILE64 with a program that does no synchronization
+Performance of Erlang on TILEPro64 with a program that does no synchronization
 between the workers was tested. It works as follows: $Master$ process generates
 $N$ lists with 100000 random numbers (where $N$ is number of workers) and spawns
 a new $Worker$ process passing the generated list. Once all workers are spawned,
@@ -567,16 +578,18 @@ the shared memory. Most importantly, application developer would not notice the
 usability change; however, this would potentially eliminate a lot of bottle-neck
 during message passing which incurs by going out of chip.
 
+\section{Clasic Paxos in Erlang}
 \label{sec:paxos-api}
 
-There are three Classic Paxos implementations in Erlang
+As of now I was able to find three Classic Paxos implementations in Erlang
 \footnote{\url{https://github.com/gburd/gen\_paxos}}
 \footnote{\url{http://libpaxos.sourceforge.net/paxos\_projects.php\#erlangpaxos}}
 \footnote{\url{http://code.google.com/p/scalaris/}}, but they are written in a
 way that it will be very difficult to extend the algorithm. Therefore classic
 paxos has been reimplemented.
 
-\section{Clasic Paxos in Erlang}
+See appendix~\ref{sec:spec-syntax} for a quick syntax introduction to Erlang
+{\tt -spec} syntax.
 
 \begin{figure}
     \begin{verbatim}
@@ -716,6 +729,117 @@ http://kickstarter.com/projects/adapteva/parallella-a-supercomputer-for-everyone
     p.~109-120.
 
 \end{thebibliography}
+
+\begin{appendices}
+
+\section{Erlang type specification syntax}
+\label{sec:spec-syntax}
+
+This is a quick tutorial to Erlang type specification syntax, which should be
+enough to understand Paxos API in section~\ref{sec:paxos-api}. Examples of
+equivalent type definitions in Haskell are provided. Haskell knowledge to
+understand this section is useful, but not mandatory.
+
+A few important differences in the type systems: type names in Erlang must be
+lowercase, whereas in Haskell they must be uppercase. Another difference is that
+Erlang functions to dot support currying. Erlang functions are uniquely defined
+by Name/Arity pair, where Arity is the number of arguments the function accepts.
+
+\subsection{Value definitions}
+
+Erlang has a few primitive types: {\tt fun()}, {\tt integer()}, {\tt bool()},
+etc. A composite type (or type alias if the type is simple) in
+figure~\ref{fig:erlang-simple-type}.
+
+\begin{figure}
+    \begin{verbatim}
+-type kv() :: {string(), integer()}.
+-type map() :: [kv()].
+    \end{verbatim}
+    \caption{Simple Erlang type definition}
+    \label{fig:erlang-simple-type}
+\end{figure}
+
+{\tt kv()} is a 2-tuple with first element {\tt string()} and second element
+{\tt integer()}. Subsequently {\tt map()} is a list of {\tt kv()}s, which makes
+it a simple map. It is equivalent to a definition in Haskell in
+figure~\ref{fig:haskell-simple-type}.
+
+\begin{figure}
+    \begin{verbatim}
+Kv :: (String, Integer)
+Map :: [Kv]
+\end{verbatim}
+    \caption{Equivalent Haskell definition}
+    \label{fig:haskell-simple-type}
+\end{figure}
+
+Both Haskell and Erlang example can be simplified to a single definition,
+figure~\ref{fig:haskell-erlang}.
+
+\begin{figure}
+    \begin{verbatim}
+-type map() :: [{string(), integer()}]. %  erlang
+Map :: [(String, Integer)]              -- haskell
+    \end{verbatim}
+    \caption{Erlang and Haskell together}
+    \label{fig:haskell-erlang}
+\end{figure}
+
+\subsection{Function type definitions}
+
+Since functions are first-class data types in Erlang, rich type language exists
+to specify their signatures. It is similar to previous example, but function
+definition is a "special" type {\tt fun()}, figure~\ref{fig:fun}. This example
+types a function which takes integer as one argument and returns a boolean.
+
+\begin{figure}
+    \begin{subfigure}[b]{\textwidth}
+        {\small \begin{verbatim}
+-type filter_fun() :: fun((integer()) -> bool()).
+            \end{verbatim}
+        }
+        \caption{Erlang}
+    \end{subfigure}
+
+    \begin{subfigure}[b]{\textwidth}
+        {\small \begin{verbatim}
+FilterFun :: Integer -> Bool
+            \end{verbatim}
+        }
+        \caption{Haskell}
+    \end{subfigure}
+    \caption{Simple function type definition}
+    \label{fig:fun}
+\end{figure}
+
+
+\subsection{Function signature definitions}
+
+There is special syntax for defining function signatures, the {\tt -spec}
+keyword. Example in figure~\ref{fig:spec}.
+
+\begin{figure}
+    \begin{subfigure}[b]{\textwidth}
+        \begin{verbatim}
+-spec cmp(integer(), integer()) -> lt | eq | gt.
+        \end{verbatim}
+        \caption{Erlang}
+    \end{subfigure}
+
+    \begin{subfigure}[b]{\textwidth}
+        \begin{verbatim}
+cmp :: Integer -> Integer -> LT | EQ | GT
+        \end{verbatim}
+        \caption{Haskell}
+    \end{subfigure}
+    \caption{Function signature}
+    \label{fig:spec}
+\end{figure}
+
+\end{appendices}
+
+\clearpage
 
 \educationalconsent
 
